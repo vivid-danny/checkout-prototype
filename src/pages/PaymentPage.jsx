@@ -47,12 +47,12 @@ const PAYMENT_METHODS = [
 const EMPTY_CARD_FORM = {
   cardNumber: '', expiry: '', cvv: '',
   name: '', phone: '', addressLine1: '', city: '', postalCode: '', state: '', country: '',
-  saveCard: false,
+  saveCard: true,
 }
 
 const EMPTY_ADDRESS_FORM = {
   name: '', phone: '', addressLine1: '', city: '', postalCode: '', state: '', country: '',
-  saveAddress: false,
+  saveAddress: true,
 }
 
 const PaymentPage = forwardRef(function PaymentPage(
@@ -66,6 +66,8 @@ const PaymentPage = forwardRef(function PaymentPage(
   const [cardForm, setCardForm] = useState(EMPTY_CARD_FORM)
   const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS_FORM)
   const [cardModalAddrIdx, setCardModalAddrIdx] = useState('new')
+  const [cvvMode, setCvvMode] = useState(savedCards.length > 0 && selectedPayment === 'credit-card')
+  const [cvvValue, setCvvValue] = useState('')
 
   const openCardModal = () => {
     setCardModalAddrIdx(addresses.length > 0 ? 0 : 'new')
@@ -74,10 +76,10 @@ const PaymentPage = forwardRef(function PaymentPage(
 
   useImperativeHandle(ref, () => ({
     fillCard() {
-      setCardForm({ ...fillData.card, saveCard: false })
+      setCardForm({ ...fillData.card, saveCard: true })
     },
     fillAddress() {
-      setAddressForm({ ...fillData.billingAddress, saveAddress: false })
+      setAddressForm({ ...fillData.billingAddress, saveAddress: true })
     },
   }), [fillData])
 
@@ -135,15 +137,23 @@ const PaymentPage = forwardRef(function PaymentPage(
   const selectPayment = (id) => {
     setSelectedPayment(id)
     setPaymentSectionOpen(false)
+    setCvvMode(false)
   }
 
   const selectSavedCard = (card) => {
     setCardData(card)
     setSelectedPayment('credit-card')
     setPaymentSectionOpen(false)
+    setCvvMode(false)
   }
 
-  const canBuy = selectedPayment !== null
+  const handleCvvUpdate = () => {
+    setCardData(prev => ({ ...prev, cvv: cvvValue }))
+    setCvvMode(false)
+    setPaymentSectionOpen(false)
+  }
+
+  const canBuy = selectedPayment !== null && !cvvMode
   const showBillingSection = selectedPayment === 'credit-card' && cardData != null
 
   const getPaymentSummary = () => {
@@ -165,7 +175,7 @@ const PaymentPage = forwardRef(function PaymentPage(
           <p className="review-section-label">Contact</p>
           <div className="review-section-row">
             <p className="review-section-value">{email || 'No email provided'}</p>
-            <button className="btn-update" onClick={onGoToLogin}>Edit</button>
+            <button className="btn-update" onClick={onGoToLogin}>Update</button>
           </div>
         </div>
 
@@ -173,13 +183,77 @@ const PaymentPage = forwardRef(function PaymentPage(
           <p className="review-section-label">Shipping Address</p>
           <div className="review-section-row">
             <p className="review-section-value">{formatAddress(shippingForm)}</p>
-            <button className="btn-update" onClick={onGoToShipping}>Edit</button>
+            <button className="btn-update" onClick={onGoToShipping}>Update</button>
           </div>
         </div>
 
         <div className="review-section review-payment-section">
           <p className="review-section-label">Payment Method</p>
-          {paymentSectionOpen ? (
+          {cvvMode ? (
+            <div className="payment-method-list">
+              {savedCards.map((card, i) => {
+                const isSelected = selectedPayment === 'credit-card' && cardData?.lastFour === card.lastFour && cardData?.expiry === card.expiry
+                return isSelected ? (
+                  <div key={i} className="payment-method-item">
+                    <input type="radio" className="shipping-radio" checked readOnly />
+                    <div className="payment-method-content">
+                      <div className="payment-method-row">
+                        <span className="payment-method-icon"><CreditCardIcon /></span>
+                        <span className="payment-method-name">****{card.lastFour}, Expires: {card.expiry}</span>
+                      </div>
+                      <div className="cvv-row">
+                        <input
+                          className="cvv-input"
+                          type="text"
+                          placeholder="CVV"
+                          maxLength={4}
+                          value={cvvValue}
+                          onChange={e => setCvvValue(e.target.value)}
+                        />
+                        <button
+                          className="btn-update btn-update-primary"
+                          onClick={handleCvvUpdate}
+                          disabled={!cvvValue.trim()}
+                        >
+                          Update
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <button key={i} className="payment-method-item" onClick={() => selectSavedCard(card)}>
+                    <input type="radio" className="shipping-radio" checked={false} readOnly />
+                    <div className="payment-method-content">
+                      <div className="payment-method-row">
+                        <span className="payment-method-icon"><CreditCardIcon /></span>
+                        <span className="payment-method-name">****{card.lastFour}, Expires: {card.expiry}</span>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+              {PAYMENT_METHODS.filter(m => m.id !== 'credit-card').map(({ id, label, Icon }) => (
+                <button key={id} className="payment-method-item" onClick={() => selectPayment(id)}>
+                  <input type="radio" className="shipping-radio" checked={false} readOnly />
+                  <div className="payment-method-content">
+                    <div className="payment-method-row">
+                      <span className="payment-method-icon"><Icon /></span>
+                      <span className="payment-method-name">{label}</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+              <button className="payment-method-item" onClick={() => openCardModal()}>
+                <input type="radio" className="shipping-radio" checked={false} readOnly />
+                <div className="payment-method-content">
+                  <div className="payment-method-row">
+                    <span className="payment-method-icon"><CreditCardIcon /></span>
+                    <span className="payment-method-name">New Credit Card</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+          ) : paymentSectionOpen ? (
             <div className="payment-method-list">
               {savedCards.length > 0 ? (
                 <>
@@ -239,7 +313,7 @@ const PaymentPage = forwardRef(function PaymentPage(
                 <span className="payment-method-icon"><paymentSummary.Icon /></span>
                 <p className="review-section-value">{paymentSummary.label}</p>
               </div>
-              <button className="btn-update" onClick={() => setPaymentSectionOpen(true)}>Edit</button>
+              <button className="btn-update" onClick={() => { setSelectedPayment(null); setCardData(null); setPaymentSectionOpen(true) }}>Update</button>
             </div>
           )}
         </div>
@@ -250,16 +324,12 @@ const PaymentPage = forwardRef(function PaymentPage(
             {billingSectionOpen ? (
               <div className="payment-method-list">
                 {addresses.map((addr, i) => {
-                  const isSelected = cardData?.billingForm &&
-                    addr.addressLine1 === cardData.billingForm.addressLine1 &&
-                    addr.postalCode === cardData.billingForm.postalCode &&
-                    addr.name === cardData.billingForm.name
                   return (
                     <button key={i} className="payment-method-item" onClick={() => {
                       setCardData(prev => ({ ...prev, billingForm: { ...addr } }))
                       setBillingSectionOpen(false)
                     }}>
-                      <input type="radio" className="shipping-radio" checked={!!isSelected} readOnly />
+                      <input type="radio" className="shipping-radio" checked={false} readOnly />
                       <div className="payment-method-content">
                         <div className="payment-method-row">
                           <span className="payment-method-name">{formatAddress(addr)}</span>
@@ -280,7 +350,7 @@ const PaymentPage = forwardRef(function PaymentPage(
             ) : (
               <div className="review-section-row">
                 <p className="review-section-value">{formatAddress(cardData.billingForm)}</p>
-                <button className="btn-update" onClick={() => setBillingSectionOpen(true)}>Edit</button>
+                <button className="btn-update" onClick={() => setBillingSectionOpen(true)}>Update</button>
               </div>
             )}
           </div>
@@ -465,6 +535,9 @@ const PaymentPage = forwardRef(function PaymentPage(
                   </div>
                 </button>
               </div>
+            )}
+            {addresses.length > 0 && cardModalAddrIdx === 'new' && (
+              <div className="checkout-divider" style={{ margin: '8px 0' }} />
             )}
             {(addresses.length === 0 || cardModalAddrIdx === 'new') && (
               <div className="address-form">

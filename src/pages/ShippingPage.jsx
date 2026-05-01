@@ -13,7 +13,7 @@ const formatAddress = (f) =>
 export default function ShippingPage({ form, setForm, addresses, onAddAddress, selectedShipping, setSelectedShipping, onContinue }) {
   const hasSaved = addresses.length > 0
   const [selectedAddressIdx, setSelectedAddressIdx] = useState(hasSaved ? 0 : 'new')
-  const [saveAddress, setSaveAddress] = useState(false)
+  const [saveAddress, setSaveAddress] = useState(true)
 
   const showAddressForm = selectedShipping !== null
   const showSavedList = showAddressForm && hasSaved

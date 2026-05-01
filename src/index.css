@@ -1152,6 +1152,50 @@ a {
   color: var(--text-primary);
 }
 
+/* ---- CVV inline entry ---- */
+
+.cvv-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.cvv-input {
+  width: 120px;
+  padding: 4px 12px;
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--text-primary);
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cvv-input:focus {
+  border-color: var(--primary);
+}
+
+.cvv-input::placeholder {
+  color: var(--text-disabled, #a0a2b3);
+}
+
+.btn-update-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-update-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 6%, white);
+}
+
+.btn-update-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ---- Review CTA ---- */
 
 .review-cta {
@@ -1260,6 +1304,7 @@ a {
 
 .modal-actions .btn-primary {
   width: 100%;
+  max-width: none;
 }
 
 /* Payment closed-state summary row */
