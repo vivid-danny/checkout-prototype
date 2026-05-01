@@ -1,5 +1,4 @@
-import { useState, forwardRef, useImperativeHandle } from 'react'
-
+import { useState } from 'react'
 
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
@@ -12,33 +11,51 @@ const US_STATES = [
   'Wisconsin','Wyoming',
 ]
 
-const ShippingPage = forwardRef(function ShippingPage(
-  { form, setForm, selectedShipping, setSelectedShipping, onContinue },
-  ref
-) {
+const EMPTY_FORM = {
+  name: '', phone: '', addressLine1: '', city: '', postalCode: '', state: '', country: '',
+}
+
+const formatAddress = (f) =>
+  [f.name, f.addressLine1, f.city, f.state, f.postalCode]
+    .filter(Boolean)
+    .join(', ')
+
+export default function ShippingPage({ form, setForm, savedAddresses, onAddAddress, selectedShipping, setSelectedShipping, onContinue }) {
+  const hasSaved = savedAddresses.length > 0
+  const [selectedAddressIdx, setSelectedAddressIdx] = useState(hasSaved ? 0 : 'new')
   const [saveAddress, setSaveAddress] = useState(false)
 
-  useImperativeHandle(ref, () => ({
-    fillAddress() {
-      setSelectedShipping('basic')
-      setForm({
-        name: 'John Doe',
-        phone: '(312) 555-0192',
-        addressLine1: '233 S Wacker Dr',
-        city: 'Chicago',
-        postalCode: '60606',
-        state: 'Illinois',
-        country: 'US',
-      })
-    },
-  }))
-
   const showAddressForm = selectedShipping !== null
-  const canContinue = showAddressForm &&
-    form.name.trim() && form.phone.trim() && form.city.trim() &&
+  const showSavedList = showAddressForm && hasSaved
+  const showForm = showAddressForm && (!hasSaved || selectedAddressIdx === 'new')
+
+  const isFormValid = form.name.trim() && form.phone.trim() && form.city.trim() &&
     form.postalCode.trim() && form.state && form.country
 
+  const canContinue = showAddressForm && (
+    (hasSaved && selectedAddressIdx !== 'new') ||
+    (!hasSaved && isFormValid) ||
+    (selectedAddressIdx === 'new' && isFormValid)
+  )
+
   const updateField = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }))
+
+  const selectSaved = (i) => {
+    setSelectedAddressIdx(i)
+    setForm({ ...savedAddresses[i] })
+  }
+
+  const selectNew = () => {
+    setSelectedAddressIdx('new')
+    setForm({ ...EMPTY_FORM })
+  }
+
+  const handleContinue = () => {
+    if (selectedAddressIdx === 'new') {
+      onAddAddress({ ...form })
+    }
+    onContinue()
+  }
 
   return (
     <div className="shipping-form-wrapper">
@@ -73,11 +90,50 @@ const ShippingPage = forwardRef(function ShippingPage(
         </div>
       </div>
 
-      {showAddressForm && (
+      {showSavedList && (
         <>
           <div className="checkout-divider" />
           <div className="address-section">
             <p className="form-section-title">Shipping Address</p>
+            <div className="payment-method-list">
+              {savedAddresses.map((addr, i) => (
+                <button key={i} className="payment-method-item" onClick={() => selectSaved(i)}>
+                  <input
+                    type="radio"
+                    className="shipping-radio"
+                    checked={selectedAddressIdx === i}
+                    readOnly
+                  />
+                  <div className="payment-method-content">
+                    <div className="payment-method-row">
+                      <span className="payment-method-name">{formatAddress(addr)}</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+              <button className="payment-method-item" onClick={selectNew}>
+                <input
+                  type="radio"
+                  className="shipping-radio"
+                  checked={selectedAddressIdx === 'new'}
+                  readOnly
+                />
+                <div className="payment-method-content">
+                  <div className="payment-method-row">
+                    <span className="payment-method-name">New Address</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showForm && (
+        <>
+          <div className="checkout-divider" />
+          <div className="address-section">
+            {!hasSaved && <p className="form-section-title">Shipping Address</p>}
             <div className="address-form">
 
               <div className="form-field-group">
@@ -184,12 +240,10 @@ const ShippingPage = forwardRef(function ShippingPage(
       <button
         className="btn-primary"
         disabled={!canContinue}
-        onClick={canContinue ? onContinue : undefined}
+        onClick={canContinue ? handleContinue : undefined}
       >
         Continue
       </button>
     </div>
   )
-})
-
-export default ShippingPage
+}

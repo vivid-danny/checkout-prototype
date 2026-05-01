@@ -67,7 +67,7 @@ const EMPTY_ADDRESS_FORM = {
 }
 
 const PaymentPage = forwardRef(function PaymentPage(
-  { email, shippingForm, cardData, setCardData, selectedPayment, setSelectedPayment, onGoToLogin, onGoToShipping },
+  { email, shippingForm, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, onGoToLogin, onGoToShipping },
   ref
 ) {
   const [showCardModal, setShowCardModal] = useState(false)
@@ -76,36 +76,17 @@ const PaymentPage = forwardRef(function PaymentPage(
   const [billingSectionOpen, setBillingSectionOpen] = useState(false)
   const [cardForm, setCardForm] = useState(EMPTY_CARD_FORM)
   const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS_FORM)
+  const [selectedBillingSource, setSelectedBillingSource] = useState('shipping')
+  const [customBillingAddresses, setCustomBillingAddresses] = useState([])
 
   useImperativeHandle(ref, () => ({
     fillCard() {
-      setCardForm({
-        cardNumber: '4111111145804580',
-        expiry: '03/32',
-        cvv: '123',
-        name: 'John Doe',
-        phone: '(312) 555-0192',
-        addressLine1: '233 S Wacker Dr',
-        city: 'Chicago',
-        postalCode: '60606',
-        state: 'Illinois',
-        country: 'US',
-        saveCard: false,
-      })
+      setCardForm({ ...fillData.card, saveCard: false })
     },
     fillAddress() {
-      setAddressForm({
-        name: 'Jane Doe',
-        phone: '(312) 555-0199',
-        addressLine1: '100 N Michigan Ave',
-        city: 'Chicago',
-        postalCode: '60601',
-        state: 'Illinois',
-        country: 'US',
-        saveAddress: false,
-      })
+      setAddressForm({ ...fillData.billingAddress, saveAddress: false })
     },
-  }))
+  }), [fillData])
 
   const updateCardField = (field) => (e) =>
     setCardForm(prev => ({ ...prev, [field]: field === 'saveCard' ? e.target.checked : e.target.value }))
@@ -116,19 +97,14 @@ const PaymentPage = forwardRef(function PaymentPage(
   const handleAddCard = () => {
     const digits = cardForm.cardNumber.replace(/\D/g, '')
     const lastFour = digits.slice(-4) || '0000'
-    setCardData({
+    const newCard = {
       lastFour,
       expiry: cardForm.expiry || '00/00',
-      billingForm: {
-        name: cardForm.name,
-        phone: cardForm.phone,
-        addressLine1: cardForm.addressLine1,
-        city: cardForm.city,
-        postalCode: cardForm.postalCode,
-        state: cardForm.state,
-        country: cardForm.country,
-      },
-    })
+      billingForm: { ...shippingForm },
+    }
+    onAddCard(newCard)
+    setSelectedBillingSource('shipping')
+    setCustomBillingAddresses([])
     setSelectedPayment('credit-card')
     setShowCardModal(false)
     setPaymentSectionOpen(false)
@@ -137,18 +113,20 @@ const PaymentPage = forwardRef(function PaymentPage(
   }
 
   const handleAddAddress = () => {
-    setCardData(prev => ({
-      ...prev,
-      billingForm: {
-        name: addressForm.name,
-        phone: addressForm.phone,
-        addressLine1: addressForm.addressLine1,
-        city: addressForm.city,
-        postalCode: addressForm.postalCode,
-        state: addressForm.state,
-        country: addressForm.country,
-      },
-    }))
+    const newAddress = {
+      name: addressForm.name,
+      phone: addressForm.phone,
+      addressLine1: addressForm.addressLine1,
+      city: addressForm.city,
+      postalCode: addressForm.postalCode,
+      state: addressForm.state,
+      country: addressForm.country,
+    }
+    setCustomBillingAddresses(prev => {
+      setSelectedBillingSource(prev.length)
+      return [...prev, newAddress]
+    })
+    setCardData(prev => ({ ...prev, billingForm: newAddress }))
     setShowAddressModal(false)
     setBillingSectionOpen(false)
     setAddressForm(EMPTY_ADDRESS_FORM)
@@ -156,6 +134,14 @@ const PaymentPage = forwardRef(function PaymentPage(
 
   const selectPayment = (id) => {
     setSelectedPayment(id)
+    setPaymentSectionOpen(false)
+  }
+
+  const selectSavedCard = (card) => {
+    setCardData(card)
+    setSelectedBillingSource('shipping')
+    setCustomBillingAddresses([])
+    setSelectedPayment('credit-card')
     setPaymentSectionOpen(false)
   }
 
@@ -196,17 +182,19 @@ const PaymentPage = forwardRef(function PaymentPage(
           <p className="review-section-label">Payment Method</p>
           {paymentSectionOpen ? (
             <div className="payment-method-list">
-              {cardData ? (
+              {savedCards.length > 0 ? (
                 <>
-                  <button className="payment-method-item" onClick={() => selectPayment('credit-card')}>
-                    <input type="radio" className="shipping-radio" checked={selectedPayment === 'credit-card'} readOnly />
-                    <div className="payment-method-content">
-                      <div className="payment-method-row">
-                        <span className="payment-method-icon"><CreditCardIcon /></span>
-                        <span className="payment-method-name">****{cardData.lastFour}, Expires: {cardData.expiry}</span>
+                  {savedCards.map((card, i) => (
+                    <button key={i} className="payment-method-item" onClick={() => selectSavedCard(card)}>
+                      <input type="radio" className="shipping-radio" checked={selectedPayment === 'credit-card' && cardData === card} readOnly />
+                      <div className="payment-method-content">
+                        <div className="payment-method-row">
+                          <span className="payment-method-icon"><CreditCardIcon /></span>
+                          <span className="payment-method-name">****{card.lastFour}, Expires: {card.expiry}</span>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  ))}
                   {PAYMENT_METHODS.filter(m => m.id !== 'credit-card').map(({ id, label, Icon }) => (
                     <button key={id} className="payment-method-item" onClick={() => selectPayment(id)}>
                       <input type="radio" className="shipping-radio" checked={selectedPayment === id} readOnly />
@@ -267,14 +255,32 @@ const PaymentPage = forwardRef(function PaymentPage(
             <p className="review-section-label">Billing Address</p>
             {billingSectionOpen ? (
               <div className="payment-method-list">
-                <button className="payment-method-item" onClick={() => setBillingSectionOpen(false)}>
-                  <input type="radio" className="shipping-radio" checked={true} readOnly />
+                <button className="payment-method-item" onClick={() => {
+                  setSelectedBillingSource('shipping')
+                  setCardData(prev => ({ ...prev, billingForm: { ...shippingForm } }))
+                  setBillingSectionOpen(false)
+                }}>
+                  <input type="radio" className="shipping-radio" checked={selectedBillingSource === 'shipping'} readOnly />
                   <div className="payment-method-content">
                     <div className="payment-method-row">
-                      <span className="payment-method-name">{formatAddress(cardData.billingForm)}</span>
+                      <span className="payment-method-name">{formatAddress(shippingForm)}</span>
                     </div>
                   </div>
                 </button>
+                {customBillingAddresses.map((addr, i) => (
+                  <button key={i} className="payment-method-item" onClick={() => {
+                    setSelectedBillingSource(i)
+                    setCardData(prev => ({ ...prev, billingForm: addr }))
+                    setBillingSectionOpen(false)
+                  }}>
+                    <input type="radio" className="shipping-radio" checked={selectedBillingSource === i} readOnly />
+                    <div className="payment-method-content">
+                      <div className="payment-method-row">
+                        <span className="payment-method-name">{formatAddress(addr)}</span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
                 <button className="payment-method-item" onClick={() => setShowAddressModal(true)}>
                   <input type="radio" className="shipping-radio" checked={false} readOnly />
                   <div className="payment-method-content">

@@ -1,9 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import CheckoutLayout from './components/CheckoutLayout'
 import PrototypeControls from './components/PrototypeControls'
 import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
 import PaymentPage from './pages/PaymentPage'
+import { USER_PROFILES } from './data/users'
+import { useRef } from 'react'
 
 const ORDER = {
   event: {
@@ -40,13 +42,15 @@ const EMPTY_FORM = {
 }
 
 export default function App() {
+  const [activeUser, setActiveUser] = useState('new')
   const [page, setPage] = useState('login')
   const [email, setEmail] = useState('')
   const [shippingForm, setShippingForm] = useState(EMPTY_FORM)
   const [selectedShipping, setSelectedShipping] = useState(null)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [cardData, setCardData] = useState(null)
-  const shippingRef = useRef(null)
+  const [savedAddresses, setSavedAddresses] = useState([])
+  const [savedCards, setSavedCards] = useState([])
   const paymentRef = useRef(null)
 
   const reset = () => {
@@ -56,18 +60,57 @@ export default function App() {
     setSelectedShipping(null)
     setSelectedPayment(null)
     setCardData(null)
+    setSavedAddresses([])
+    setSavedCards([])
   }
+
+  const handleUserChange = (userId) => {
+    setActiveUser(userId)
+    reset()
+  }
+
+  const handleLoginContinue = (e) => {
+    const profile = USER_PROFILES[activeUser]
+    setEmail(e)
+    setSavedAddresses([...profile.savedAddresses])
+    setSavedCards([...profile.savedCards])
+    if (profile.savedAddresses.length > 0) {
+      setShippingForm({ ...profile.savedAddresses[0] })
+    } else {
+      setShippingForm(EMPTY_FORM)
+    }
+    setPage('shipping')
+  }
+
+  const handleAddAddress = (addr) => {
+    setSavedAddresses(prev => [...prev, addr])
+  }
+
+  const handleAddCard = (card) => {
+    setSavedCards(prev => [...prev, card])
+    setCardData(card)
+  }
+
+  const fillData = USER_PROFILES[activeUser].fillData
 
   const controls = {
     login: [],
     shipping: [
-      { label: 'Fill Address Form', onClick: () => shippingRef.current?.fillAddress() },
+      {
+        label: 'Fill Address Form',
+        onClick: () => {
+          setShippingForm({ ...fillData.address })
+          setSelectedShipping('basic')
+        },
+      },
     ],
     payment: [
       { label: 'Fill Credit Card', onClick: () => paymentRef.current?.fillCard() },
       { label: 'Fill Address', onClick: () => paymentRef.current?.fillAddress() },
     ],
   }
+
+  const users = Object.entries(USER_PROFILES).map(([id, p]) => ({ id, label: p.label }))
 
   return (
     <>
@@ -81,17 +124,24 @@ export default function App() {
         {page === 'login' && (
           <LoginPage
             email={email}
-            onContinue={(e) => { setEmail(e); setPage('shipping') }}
+            onContinue={handleLoginContinue}
           />
         )}
         {page === 'shipping' && (
           <ShippingPage
-            ref={shippingRef}
             form={shippingForm}
             setForm={setShippingForm}
+            savedAddresses={savedAddresses}
+            onAddAddress={handleAddAddress}
             selectedShipping={selectedShipping}
             setSelectedShipping={setSelectedShipping}
-            onContinue={() => setPage('payment')}
+            onContinue={() => {
+              if (savedCards.length > 0 && !selectedPayment) {
+                setCardData({ ...savedCards[0], billingForm: { ...shippingForm } })
+                setSelectedPayment('credit-card')
+              }
+              setPage('payment')
+            }}
           />
         )}
         {page === 'payment' && (
@@ -101,6 +151,9 @@ export default function App() {
             shippingForm={shippingForm}
             cardData={cardData}
             setCardData={setCardData}
+            savedCards={savedCards}
+            onAddCard={handleAddCard}
+            fillData={fillData}
             selectedPayment={selectedPayment}
             setSelectedPayment={setSelectedPayment}
             onGoToLogin={() => setPage('login')}
@@ -108,7 +161,13 @@ export default function App() {
           />
         )}
       </CheckoutLayout>
-      <PrototypeControls actions={controls[page]} onReset={reset} />
+      <PrototypeControls
+        actions={controls[page]}
+        onReset={reset}
+        users={users}
+        activeUser={activeUser}
+        onUserChange={handleUserChange}
+      />
     </>
   )
 }
