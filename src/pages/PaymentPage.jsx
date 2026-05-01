@@ -146,7 +146,8 @@ const PaymentPage = forwardRef(function PaymentPage(
     setCardData(card)
     setSelectedPayment('credit-card')
     setPaymentSectionOpen(false)
-    setCvvMode(false)
+    setCvvValue('')
+    setCvvMode(true)
   }
 
   const handleCvvUpdate = () => {
