@@ -42,7 +42,7 @@ const ORDERS = {
       dealLabel: 'Fantastic Deal',
       tickets: { count: 2, unitPrice: 89.00 },
       fees: { count: 2, unitPrice: 19.95 },
-      taxes: 0,
+      taxes: 14.22,
     },
     ticketDetails: {
       ...TICKET_DETAILS_BASE,
