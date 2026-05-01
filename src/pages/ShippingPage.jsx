@@ -1,15 +1,5 @@
 import { useState } from 'react'
-
-const US_STATES = [
-  'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
-  'Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa',
-  'Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
-  'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire',
-  'New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio',
-  'Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota',
-  'Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia',
-  'Wisconsin','Wyoming',
-]
+import { US_STATES } from '../utils/address'
 
 const EMPTY_FORM = {
   name: '', phone: '', addressLine1: '', city: '', postalCode: '', state: '', country: '',
@@ -32,11 +22,7 @@ export default function ShippingPage({ form, setForm, addresses, onAddAddress, s
   const isFormValid = form.name.trim() && form.phone.trim() && form.city.trim() &&
     form.postalCode.trim() && form.state && form.country
 
-  const canContinue = showAddressForm && (
-    (hasSaved && selectedAddressIdx !== 'new') ||
-    (!hasSaved && isFormValid) ||
-    (selectedAddressIdx === 'new' && isFormValid)
-  )
+  const canContinue = showAddressForm && (selectedAddressIdx !== 'new' || isFormValid)
 
   const updateField = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }))
 
