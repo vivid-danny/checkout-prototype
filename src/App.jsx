@@ -122,7 +122,11 @@ export default function App() {
   }
 
   const handleAddAddress = (addr) => {
-    setAddresses(prev => [...prev, addr])
+    setAddresses(prev => [...prev, { ...addr, isNew: true }])
+  }
+
+  const handleUpdateAddress = (idx, updatedAddr) => {
+    setAddresses(prev => prev.map((a, i) => i === idx ? { ...updatedAddr, isNew: true } : a))
   }
 
   const handleAddCard = (card) => {
@@ -205,12 +209,14 @@ export default function App() {
                 setCardData={setCardData}
                 addresses={addresses}
                 onAddAddress={handleAddAddress}
+                onUpdateAddress={handleUpdateAddress}
                 savedCards={savedCards}
                 onAddCard={handleAddCard}
                 fillData={fillData}
                 selectedPayment={selectedPayment}
                 setSelectedPayment={setSelectedPayment}
                 ticketType={ticketType}
+                errorState={activeUser === 'error'}
               />
             }
           />
