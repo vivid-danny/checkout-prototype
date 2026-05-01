@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import CheckoutLayout from './components/CheckoutLayout'
 import PrototypeControls from './components/PrototypeControls'
 import LoginPage from './pages/LoginPage'
@@ -63,9 +64,12 @@ const EMPTY_FORM = {
 }
 
 export default function App() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const currentPage = location.pathname.split('/').pop()
+
   const [activeUser, setActiveUser] = useState('new')
   const [ticketType, setTicketType] = useState('hard-stock')
-  const [page, setPage] = useState('login')
   const [email, setEmail] = useState('')
   const [shippingForm, setShippingForm] = useState(EMPTY_FORM)
   const [selectedShipping, setSelectedShipping] = useState(null)
@@ -76,7 +80,6 @@ export default function App() {
   const paymentRef = useRef(null)
 
   const reset = () => {
-    setPage('login')
     setEmail('')
     setShippingForm(EMPTY_FORM)
     setSelectedShipping(null)
@@ -84,6 +87,7 @@ export default function App() {
     setCardData(null)
     setAddresses([])
     setSavedCards([])
+    navigate('/checkout/login')
   }
 
   const handleUserChange = (userId) => {
@@ -106,14 +110,14 @@ export default function App() {
         setCardData({ ...profile.savedCards[0] })
         setSelectedPayment('credit-card')
       }
-      setPage('payment')
+      navigate('/checkout/payment')
     } else {
       if (profile.savedAddresses.length > 0) {
         setShippingForm({ ...profile.savedAddresses[0] })
       } else {
         setShippingForm(EMPTY_FORM)
       }
-      setPage('shipping')
+      navigate('/checkout/shipping')
     }
   }
 
@@ -149,59 +153,72 @@ export default function App() {
 
   return (
     <>
-      <CheckoutLayout
-        progress={PROGRESS[ticketType][page]}
-        event={ORDERS[ticketType].event}
-        pricing={ORDERS[ticketType].pricing}
-        ticketDetails={ORDERS[ticketType].ticketDetails}
-        selectedShipping={page === 'payment' ? selectedShipping : null}
-        ticketType={ticketType}
-      >
-        {page === 'login' && (
-          <LoginPage
-            email={email}
-            onContinue={handleLoginContinue}
+      <Routes>
+        <Route
+          path="/checkout"
+          element={
+            <CheckoutLayout
+              progress={PROGRESS[ticketType]?.[currentPage]}
+              event={ORDERS[ticketType].event}
+              pricing={ORDERS[ticketType].pricing}
+              ticketDetails={ORDERS[ticketType].ticketDetails}
+              selectedShipping={currentPage === 'payment' ? selectedShipping : null}
+              ticketType={ticketType}
+            >
+              <Outlet />
+            </CheckoutLayout>
+          }
+        >
+          <Route index element={<Navigate to="login" replace />} />
+          <Route
+            path="login"
+            element={<LoginPage email={email} onContinue={handleLoginContinue} />}
           />
-        )}
-        {page === 'shipping' && (
-          <ShippingPage
-            form={shippingForm}
-            setForm={setShippingForm}
-            addresses={addresses}
-            onAddAddress={handleAddAddress}
-            selectedShipping={selectedShipping}
-            setSelectedShipping={setSelectedShipping}
-            onContinue={() => {
-              if (savedCards.length > 0 && !selectedPayment) {
-                setCardData({ ...savedCards[0], billingForm: { ...shippingForm } })
-                setSelectedPayment('credit-card')
-              }
-              setPage('payment')
-            }}
+          <Route
+            path="shipping"
+            element={
+              <ShippingPage
+                form={shippingForm}
+                setForm={setShippingForm}
+                addresses={addresses}
+                onAddAddress={handleAddAddress}
+                selectedShipping={selectedShipping}
+                setSelectedShipping={setSelectedShipping}
+                onContinue={() => {
+                  if (savedCards.length > 0 && !selectedPayment) {
+                    setCardData({ ...savedCards[0], billingForm: { ...shippingForm } })
+                    setSelectedPayment('credit-card')
+                  }
+                  navigate('/checkout/payment')
+                }}
+              />
+            }
           />
-        )}
-        {page === 'payment' && (
-          <PaymentPage
-            ref={paymentRef}
-            email={email}
-            shippingForm={shippingForm}
-            cardData={cardData}
-            setCardData={setCardData}
-            addresses={addresses}
-            onAddAddress={handleAddAddress}
-            savedCards={savedCards}
-            onAddCard={handleAddCard}
-            fillData={fillData}
-            selectedPayment={selectedPayment}
-            setSelectedPayment={setSelectedPayment}
-            onGoToLogin={() => setPage('login')}
-            onGoToShipping={() => setPage('shipping')}
-            ticketType={ticketType}
+          <Route
+            path="payment"
+            element={
+              <PaymentPage
+                ref={paymentRef}
+                email={email}
+                shippingForm={shippingForm}
+                cardData={cardData}
+                setCardData={setCardData}
+                addresses={addresses}
+                onAddAddress={handleAddAddress}
+                savedCards={savedCards}
+                onAddCard={handleAddCard}
+                fillData={fillData}
+                selectedPayment={selectedPayment}
+                setSelectedPayment={setSelectedPayment}
+                ticketType={ticketType}
+              />
+            }
           />
-        )}
-      </CheckoutLayout>
+        </Route>
+        <Route path="*" element={<Navigate to="/checkout/login" replace />} />
+      </Routes>
       <PrototypeControls
-        actions={controls[page]}
+        actions={controls[currentPage] ?? []}
         onReset={reset}
         users={users}
         activeUser={activeUser}

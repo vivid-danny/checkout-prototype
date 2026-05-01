@@ -1,4 +1,5 @@
 import { useState, forwardRef, useImperativeHandle } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
 import { US_STATES, COUNTRY_LABELS } from '../utils/address'
 
@@ -56,9 +57,10 @@ const EMPTY_ADDRESS_FORM = {
 }
 
 const PaymentPage = forwardRef(function PaymentPage(
-  { email, shippingForm, addresses, onAddAddress, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, onGoToLogin, onGoToShipping, ticketType },
+  { email, shippingForm, addresses, onAddAddress, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, ticketType },
   ref
 ) {
+  const navigate = useNavigate()
   const [showCardModal, setShowCardModal] = useState(false)
   const [showAddressModal, setShowAddressModal] = useState(false)
   const [paymentSectionOpen, setPaymentSectionOpen] = useState(!selectedPayment)
@@ -175,7 +177,7 @@ const PaymentPage = forwardRef(function PaymentPage(
           <p className="review-section-label">Contact</p>
           <div className="review-section-row">
             <p className="review-section-value">{email || 'No email provided'}</p>
-            <button className="btn-update" onClick={onGoToLogin}>Update</button>
+            <button className="btn-update" onClick={() => navigate('/checkout/login')}>Update</button>
           </div>
         </div>
 
@@ -184,7 +186,7 @@ const PaymentPage = forwardRef(function PaymentPage(
             <p className="review-section-label">Shipping Address</p>
             <div className="review-section-row">
               <p className="review-section-value">{formatAddress(shippingForm)}</p>
-              <button className="btn-update" onClick={onGoToShipping}>Update</button>
+              <button className="btn-update" onClick={() => navigate('/checkout/shipping')}>Update</button>
             </div>
           </div>
         )}
