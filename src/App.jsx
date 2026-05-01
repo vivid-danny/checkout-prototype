@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import CheckoutLayout from './components/CheckoutLayout'
 import PrototypeControls from './components/PrototypeControls'
 import LoginPage from './pages/LoginPage'
@@ -6,27 +7,50 @@ import ShippingPage from './pages/ShippingPage'
 import PaymentPage from './pages/PaymentPage'
 import { USER_PROFILES } from './data/users'
 
-const ORDER = {
-  event: {
-    name: 'New York Knicks at Chicago Bulls',
-    date: 'Wednesday January 15 at 7:00pm',
-    venue: 'United Center, Chicago, IL',
+const EVENT = {
+  name: 'New York Knicks at Chicago Bulls',
+  date: 'Wednesday January 15 at 7:00pm',
+  venue: 'United Center, Chicago, IL',
+}
+
+const TICKET_DETAILS_BASE = {
+  section: 'Lower Level 105, Row 11',
+  quantity: 2,
+  perks: 'Front of Section, Unlimited Food & Beverage',
+}
+
+const ORDERS = {
+  'hard-stock': {
+    event: EVENT,
+    pricing: {
+      dealScore: 7,
+      dealLabel: 'Good Deal',
+      tickets: { count: 2, unitPrice: 127.50 },
+      fees: { count: 2, unitPrice: 24.95 },
+      taxes: 0,
+    },
+    ticketDetails: {
+      ...TICKET_DETAILS_BASE,
+      delivery: 'Shipped via UPS',
+      deliveryNote: 'Tickets delivered to your address',
+      inHandDate: 'Tickets delivered by January 13, 2026',
+    },
   },
-  pricing: {
-    dealScore: 10,
-    dealLabel: 'Fantastic Deal',
-    tickets: { count: 2, unitPrice: 100 },
-    fees: { count: 2, unitPrice: 25 },
-    taxes: 0,
-    total: 250,
-  },
-  ticketDetails: {
-    section: 'Lower Level 105, Row 11',
-    quantity: 2,
-    perks: 'Front of Section, Unlimited Food & Beverage',
-    delivery: 'Shipped via UPS',
-    deliveryNote: 'Tickets delivered to your address',
-    inHandDate: 'Tickets delivered by January 13, 2026',
+  'e-ticket': {
+    event: EVENT,
+    pricing: {
+      dealScore: 10,
+      dealLabel: 'Fantastic Deal',
+      tickets: { count: 2, unitPrice: 89.00 },
+      fees: { count: 2, unitPrice: 19.95 },
+      taxes: 14.22,
+    },
+    ticketDetails: {
+      ...TICKET_DETAILS_BASE,
+      delivery: 'E-Ticket',
+      deliveryNote: 'Delivered to your email',
+      inHandDate: 'E-Tickets available after purchase',
+    },
   },
 }
 
@@ -40,9 +64,12 @@ const EMPTY_FORM = {
 }
 
 export default function App() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const currentPage = location.pathname.split('/').pop()
+
   const [activeUser, setActiveUser] = useState('new')
   const [ticketType, setTicketType] = useState('hard-stock')
-  const [page, setPage] = useState('login')
   const [email, setEmail] = useState('')
   const [shippingForm, setShippingForm] = useState(EMPTY_FORM)
   const [selectedShipping, setSelectedShipping] = useState(null)
@@ -53,7 +80,6 @@ export default function App() {
   const paymentRef = useRef(null)
 
   const reset = () => {
-    setPage('login')
     setEmail('')
     setShippingForm(EMPTY_FORM)
     setSelectedShipping(null)
@@ -61,6 +87,7 @@ export default function App() {
     setCardData(null)
     setAddresses([])
     setSavedCards([])
+    navigate('/checkout/login')
   }
 
   const handleUserChange = (userId) => {
@@ -83,19 +110,23 @@ export default function App() {
         setCardData({ ...profile.savedCards[0] })
         setSelectedPayment('credit-card')
       }
-      setPage('payment')
+      navigate('/checkout/payment')
     } else {
       if (profile.savedAddresses.length > 0) {
         setShippingForm({ ...profile.savedAddresses[0] })
       } else {
         setShippingForm(EMPTY_FORM)
       }
-      setPage('shipping')
+      navigate('/checkout/shipping')
     }
   }
 
   const handleAddAddress = (addr) => {
-    setAddresses(prev => [...prev, addr])
+    setAddresses(prev => [...prev, { ...addr, isNew: true }])
+  }
+
+  const handleUpdateAddress = (idx, updatedAddr) => {
+    setAddresses(prev => prev.map((a, i) => i === idx ? { ...updatedAddr, isNew: true } : a))
   }
 
   const handleAddCard = (card) => {
@@ -126,59 +157,74 @@ export default function App() {
 
   return (
     <>
-      <CheckoutLayout
-        progress={PROGRESS[ticketType][page]}
-        event={ORDER.event}
-        pricing={ORDER.pricing}
-        ticketDetails={ORDER.ticketDetails}
-        selectedShipping={page === 'payment' ? selectedShipping : null}
-        ticketType={ticketType}
-      >
-        {page === 'login' && (
-          <LoginPage
-            email={email}
-            onContinue={handleLoginContinue}
+      <Routes>
+        <Route
+          path="/checkout"
+          element={
+            <CheckoutLayout
+              progress={PROGRESS[ticketType]?.[currentPage]}
+              event={ORDERS[ticketType].event}
+              pricing={ORDERS[ticketType].pricing}
+              ticketDetails={ORDERS[ticketType].ticketDetails}
+              selectedShipping={currentPage === 'payment' ? selectedShipping : null}
+              ticketType={ticketType}
+            >
+              <Outlet />
+            </CheckoutLayout>
+          }
+        >
+          <Route index element={<Navigate to="login" replace />} />
+          <Route
+            path="login"
+            element={<LoginPage email={email} onContinue={handleLoginContinue} />}
           />
-        )}
-        {page === 'shipping' && (
-          <ShippingPage
-            form={shippingForm}
-            setForm={setShippingForm}
-            addresses={addresses}
-            onAddAddress={handleAddAddress}
-            selectedShipping={selectedShipping}
-            setSelectedShipping={setSelectedShipping}
-            onContinue={() => {
-              if (savedCards.length > 0 && !selectedPayment) {
-                setCardData({ ...savedCards[0], billingForm: { ...shippingForm } })
-                setSelectedPayment('credit-card')
-              }
-              setPage('payment')
-            }}
+          <Route
+            path="shipping"
+            element={
+              <ShippingPage
+                form={shippingForm}
+                setForm={setShippingForm}
+                addresses={addresses}
+                onAddAddress={handleAddAddress}
+                selectedShipping={selectedShipping}
+                setSelectedShipping={setSelectedShipping}
+                onContinue={() => {
+                  if (savedCards.length > 0 && !selectedPayment) {
+                    setCardData({ ...savedCards[0], billingForm: { ...shippingForm } })
+                    setSelectedPayment('credit-card')
+                  }
+                  navigate('/checkout/payment')
+                }}
+              />
+            }
           />
-        )}
-        {page === 'payment' && (
-          <PaymentPage
-            ref={paymentRef}
-            email={email}
-            shippingForm={shippingForm}
-            cardData={cardData}
-            setCardData={setCardData}
-            addresses={addresses}
-            onAddAddress={handleAddAddress}
-            savedCards={savedCards}
-            onAddCard={handleAddCard}
-            fillData={fillData}
-            selectedPayment={selectedPayment}
-            setSelectedPayment={setSelectedPayment}
-            onGoToLogin={() => setPage('login')}
-            onGoToShipping={() => setPage('shipping')}
-            ticketType={ticketType}
+          <Route
+            path="payment"
+            element={
+              <PaymentPage
+                ref={paymentRef}
+                email={email}
+                shippingForm={shippingForm}
+                cardData={cardData}
+                setCardData={setCardData}
+                addresses={addresses}
+                onAddAddress={handleAddAddress}
+                onUpdateAddress={handleUpdateAddress}
+                savedCards={savedCards}
+                onAddCard={handleAddCard}
+                fillData={fillData}
+                selectedPayment={selectedPayment}
+                setSelectedPayment={setSelectedPayment}
+                ticketType={ticketType}
+                errorState={activeUser === 'error'}
+              />
+            }
           />
-        )}
-      </CheckoutLayout>
+        </Route>
+        <Route path="*" element={<Navigate to="/checkout/login" replace />} />
+      </Routes>
       <PrototypeControls
-        actions={controls[page]}
+        actions={controls[currentPage] ?? []}
         onReset={reset}
         users={users}
         activeUser={activeUser}

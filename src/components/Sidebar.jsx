@@ -16,13 +16,15 @@ const ChevronDown = () => (
   </svg>
 )
 
-const SHIPPING_LABELS = {
-  basic: 'UPS Basic Delivery',
-  overnight: 'UPS Overnight Delivery',
+const SHIPPING_OPTIONS = {
+  basic: { label: 'UPS Basic Delivery', cost: 17.50 },
+  overnight: { label: 'UPS Overnight Delivery', cost: 34.00 },
 }
 
 function PriceBreakdown({ pricing, shippingMethod }) {
-  const { dealScore, dealLabel, tickets, fees, taxes, total } = pricing
+  const { dealScore, dealLabel, tickets, fees, taxes } = pricing
+  const shipping = shippingMethod ? SHIPPING_OPTIONS[shippingMethod] : null
+  const total = tickets.unitPrice * tickets.count + fees.unitPrice * fees.count + taxes + (shipping ? shipping.cost : 0)
 
   return (
     <div className="price-breakdown">
@@ -49,10 +51,10 @@ function PriceBreakdown({ pricing, shippingMethod }) {
         </span>
       </div>
 
-      {shippingMethod && (
+      {shipping && (
         <div className="price-row">
-          <span className="price-row-label">{SHIPPING_LABELS[shippingMethod]}</span>
-          <span className="price-row-value">$20.00</span>
+          <span className="price-row-label">{shipping.label}</span>
+          <span className="price-row-value">${shipping.cost.toFixed(2)}</span>
         </div>
       )}
 

@@ -949,7 +949,7 @@ a {
   border-radius: 4px;
   color: #fff;
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
@@ -1150,6 +1150,66 @@ a {
   font-weight: 400;
   line-height: 21px;
   color: var(--text-primary);
+}
+
+/* ---- Error banner ---- */
+
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #feecec;
+  border-radius: 4px;
+  padding: 6px 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.error-banner-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  padding: 7px 12px 7px 0;
+}
+
+.error-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.error-banner-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 22.5px;
+  color: #9d0706;
+}
+
+.error-banner-body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #9d0706;
+}
+
+/* ---- Edit button (text link, primary pink) ---- */
+
+.btn-edit {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0 4px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  color: #ce3197;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-edit:hover {
+  text-decoration: underline;
 }
 
 /* ---- CVV inline entry ---- */

@@ -1,4 +1,5 @@
 import { useState, forwardRef, useImperativeHandle } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
 import { US_STATES, COUNTRY_LABELS } from '../utils/address'
 
@@ -55,19 +56,28 @@ const EMPTY_ADDRESS_FORM = {
   saveAddress: true,
 }
 
+const ErrorIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <path fillRule="evenodd" clipRule="evenodd" d="M11 2C6.03 2 2 6.03 2 11s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm1 14h-2v-2h2v2zm0-4h-2V6h2v6z" fill="#9d0706"/>
+  </svg>
+)
+
 const PaymentPage = forwardRef(function PaymentPage(
-  { email, shippingForm, addresses, onAddAddress, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, onGoToLogin, onGoToShipping, ticketType },
+  { email, shippingForm, addresses, onAddAddress, onUpdateAddress, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, ticketType, errorState },
   ref
 ) {
+  const navigate = useNavigate()
   const [showCardModal, setShowCardModal] = useState(false)
   const [showAddressModal, setShowAddressModal] = useState(false)
-  const [paymentSectionOpen, setPaymentSectionOpen] = useState(!selectedPayment)
-  const [billingSectionOpen, setBillingSectionOpen] = useState(false)
+  const [paymentSectionOpen, setPaymentSectionOpen] = useState(errorState || !selectedPayment)
+  const [billingSectionOpen, setBillingSectionOpen] = useState(errorState)
   const [cardForm, setCardForm] = useState(EMPTY_CARD_FORM)
   const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS_FORM)
   const [cardModalAddrIdx, setCardModalAddrIdx] = useState('new')
   const [cvvMode, setCvvMode] = useState(savedCards.length > 0 && selectedPayment === 'credit-card')
   const [cvvValue, setCvvValue] = useState('')
+  const [editingAddressIdx, setEditingAddressIdx] = useState(null)
+  const [purchaseAttempted, setPurchaseAttempted] = useState(false)
 
   const openCardModal = () => {
     setCardModalAddrIdx(addresses.length > 0 ? 0 : 'new')
@@ -117,6 +127,21 @@ const PaymentPage = forwardRef(function PaymentPage(
     setCardForm(EMPTY_CARD_FORM)
   }
 
+  const openEditAddressModal = (addr, idx) => {
+    setAddressForm({
+      name: addr.name || '',
+      phone: addr.phone || '',
+      addressLine1: addr.addressLine1 || '',
+      city: addr.city || '',
+      postalCode: addr.postalCode || '',
+      state: addr.state || '',
+      country: addr.country || '',
+      saveAddress: true,
+    })
+    setEditingAddressIdx(idx)
+    setShowAddressModal(true)
+  }
+
   const handleAddAddress = () => {
     const newAddress = {
       name: addressForm.name,
@@ -127,8 +152,13 @@ const PaymentPage = forwardRef(function PaymentPage(
       state: addressForm.state,
       country: addressForm.country,
     }
-    onAddAddress(newAddress)
-    setCardData(prev => ({ ...prev, billingForm: newAddress }))
+    if (editingAddressIdx !== null) {
+      onUpdateAddress(editingAddressIdx, newAddress)
+      setEditingAddressIdx(null)
+    } else {
+      onAddAddress(newAddress)
+      setCardData(prev => ({ ...prev, billingForm: newAddress }))
+    }
     setShowAddressModal(false)
     setBillingSectionOpen(false)
     setAddressForm(EMPTY_ADDRESS_FORM)
@@ -144,7 +174,8 @@ const PaymentPage = forwardRef(function PaymentPage(
     setCardData(card)
     setSelectedPayment('credit-card')
     setPaymentSectionOpen(false)
-    setCvvMode(false)
+    setCvvValue('')
+    setCvvMode(true)
   }
 
   const handleCvvUpdate = () => {
@@ -153,8 +184,8 @@ const PaymentPage = forwardRef(function PaymentPage(
     setPaymentSectionOpen(false)
   }
 
-  const canBuy = selectedPayment !== null && !cvvMode
   const showBillingSection = selectedPayment === 'credit-card' && cardData != null
+  const canBuy = selectedPayment !== null && !cvvMode && !(showBillingSection && billingSectionOpen)
 
   const getPaymentSummary = () => {
     if (selectedPayment === 'credit-card' && cardData) {
@@ -169,13 +200,23 @@ const PaymentPage = forwardRef(function PaymentPage(
     <div className="review-form-wrapper">
       <h1 className="review-title">Review Order</h1>
 
+      {errorState && purchaseAttempted && (
+        <div className="error-banner">
+          <div className="error-banner-icon"><ErrorIcon /></div>
+          <div className="error-banner-text">
+            <p className="error-banner-title">Please fix the following error(s)</p>
+            <p className="error-banner-body">Your billing information contains errors.</p>
+          </div>
+        </div>
+      )}
+
       <div className="review-billing-form">
 
         <div className="review-section review-payment-section">
           <p className="review-section-label">Contact</p>
           <div className="review-section-row">
             <p className="review-section-value">{email || 'No email provided'}</p>
-            <button className="btn-update" onClick={onGoToLogin}>Update</button>
+            <button className="btn-update" onClick={() => navigate('/checkout/login')}>Update</button>
           </div>
         </div>
 
@@ -184,7 +225,7 @@ const PaymentPage = forwardRef(function PaymentPage(
             <p className="review-section-label">Shipping Address</p>
             <div className="review-section-row">
               <p className="review-section-value">{formatAddress(shippingForm)}</p>
-              <button className="btn-update" onClick={onGoToShipping}>Update</button>
+              <button className="btn-update" onClick={() => navigate('/checkout/shipping')}>Update</button>
             </div>
           </div>
         )}
@@ -327,17 +368,25 @@ const PaymentPage = forwardRef(function PaymentPage(
               <div className="payment-method-list">
                 {addresses.map((addr, i) => {
                   return (
-                    <button key={i} className="payment-method-item" onClick={() => {
-                      setCardData(prev => ({ ...prev, billingForm: { ...addr } }))
-                      setBillingSectionOpen(false)
-                    }}>
-                      <input type="radio" className="shipping-radio" checked={false} readOnly />
-                      <div className="payment-method-content">
+                    <div key={i} className="payment-method-item">
+                      <input type="radio" className="shipping-radio" checked={false} readOnly onClick={() => {
+                        setCardData(prev => ({ ...prev, billingForm: { ...addr } }))
+                        setBillingSectionOpen(false)
+                      }} />
+                      <div className="payment-method-content" style={{ cursor: 'pointer' }} onClick={() => {
+                        setCardData(prev => ({ ...prev, billingForm: { ...addr } }))
+                        setBillingSectionOpen(false)
+                      }}>
                         <div className="payment-method-row">
                           <span className="payment-method-name">{formatAddress(addr)}</span>
                         </div>
                       </div>
-                    </button>
+                      {addr.isNew && (
+                        <button className="btn-edit" onClick={(e) => { e.stopPropagation(); openEditAddressModal(addr, i) }}>
+                          Edit
+                        </button>
+                      )}
+                    </div>
                   )
                 })}
                 <button className="payment-method-item" onClick={() => setShowAddressModal(true)}>
@@ -366,15 +415,15 @@ const PaymentPage = forwardRef(function PaymentPage(
         <p className="terms-text">
           By clicking "Buy now" you agree to the <a href="#">Terms and Conditions</a>. All sales are final.
         </p>
-        <button className="btn-primary" disabled={!canBuy}>Buy now</button>
+        <button className="btn-primary" disabled={!canBuy} onClick={() => { if (errorState) setPurchaseAttempted(true) }}>Buy now</button>
       </div>
 
       {showAddressModal && (
         <Modal
-          title="Add New Address"
-          onClose={() => setShowAddressModal(false)}
+          title={editingAddressIdx !== null ? 'Update Address' : 'Add New Address'}
+          onClose={() => { setShowAddressModal(false); setEditingAddressIdx(null); setAddressForm(EMPTY_ADDRESS_FORM) }}
           onSubmit={handleAddAddress}
-          submitLabel="Add Address"
+          submitLabel={editingAddressIdx !== null ? 'Update Address' : 'Add Address'}
         >
           <div className="modal-section">
             <div className="address-form">

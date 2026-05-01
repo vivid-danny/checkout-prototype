@@ -7,7 +7,7 @@ export default function PrototypeControls({ actions = [], onReset, users = [], a
   return (
     <div className="prototype-panel">
       <div className="prototype-panel-header">
-        <span className="prototype-panel-title">Prototype</span>
+        <span className="prototype-panel-title">Configuration</span>
       </div>
       <div className="prototype-panel-body">
         <div className="prototype-user-section">
@@ -28,7 +28,7 @@ export default function PrototypeControls({ actions = [], onReset, users = [], a
         {users.length > 0 && (
           <>
             <div className="prototype-user-section">
-              <span className="prototype-user-label">User Type</span>
+              <span className="prototype-user-label">User Scenarios</span>
               <div className="prototype-user-btns">
                 {users.map(({ id, label }) => (
                   <button

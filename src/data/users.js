@@ -54,6 +54,27 @@ export const USER_PROFILES = {
     },
   },
 
+  error: {
+    label: 'Error State',
+    savedAddresses: [],
+    savedCards: [],
+    fillData: {
+      address: {
+        name: 'John Doe', phone: '(312) 555-0192', addressLine1: '233 S Wacker Dr',
+        city: 'Chicago', postalCode: '60606', state: 'Illinois', country: 'US',
+      },
+      billingAddress: {
+        name: 'Jane Doe', phone: '(312) 555-0199', addressLine1: '100 N Michigan Ave',
+        city: 'Chicago', postalCode: '60601', state: 'Illinois', country: 'US',
+      },
+      card: {
+        cardNumber: '4111111145804580', expiry: '03/32', cvv: '123', name: 'John Doe',
+        phone: '(312) 555-0192', addressLine1: '233 S Wacker Dr', city: 'Chicago',
+        postalCode: '60606', state: 'Illinois', country: 'US', saveCard: false,
+      },
+    },
+  },
+
   power: {
     label: 'Power User',
     savedAddresses: [
