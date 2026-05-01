@@ -67,7 +67,7 @@ const EMPTY_ADDRESS_FORM = {
 }
 
 const PaymentPage = forwardRef(function PaymentPage(
-  { email, shippingForm, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, onGoToLogin, onGoToShipping },
+  { email, shippingForm, addresses, onAddAddress, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, onGoToLogin, onGoToShipping },
   ref
 ) {
   const [showCardModal, setShowCardModal] = useState(false)
@@ -76,8 +76,12 @@ const PaymentPage = forwardRef(function PaymentPage(
   const [billingSectionOpen, setBillingSectionOpen] = useState(false)
   const [cardForm, setCardForm] = useState(EMPTY_CARD_FORM)
   const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS_FORM)
-  const [selectedBillingSource, setSelectedBillingSource] = useState('shipping')
-  const [customBillingAddresses, setCustomBillingAddresses] = useState([])
+  const [cardModalAddrIdx, setCardModalAddrIdx] = useState('new')
+
+  const openCardModal = () => {
+    setCardModalAddrIdx(addresses.length > 0 ? 0 : 'new')
+    setShowCardModal(true)
+  }
 
   useImperativeHandle(ref, () => ({
     fillCard() {
@@ -97,14 +101,24 @@ const PaymentPage = forwardRef(function PaymentPage(
   const handleAddCard = () => {
     const digits = cardForm.cardNumber.replace(/\D/g, '')
     const lastFour = digits.slice(-4) || '0000'
-    const newCard = {
-      lastFour,
-      expiry: cardForm.expiry || '00/00',
-      billingForm: { ...shippingForm },
+    let billingForm
+    if (addresses.length > 0 && cardModalAddrIdx !== 'new') {
+      billingForm = addresses[cardModalAddrIdx]
+    } else {
+      const cardBilling = {
+        name: cardForm.name,
+        phone: cardForm.phone,
+        addressLine1: cardForm.addressLine1,
+        city: cardForm.city,
+        postalCode: cardForm.postalCode,
+        state: cardForm.state,
+        country: cardForm.country,
+      }
+      const hasBillingAddress = cardBilling.name.trim() && cardBilling.addressLine1.trim()
+      billingForm = hasBillingAddress ? cardBilling : { ...shippingForm }
+      if (hasBillingAddress) onAddAddress(cardBilling)
     }
-    onAddCard(newCard)
-    setSelectedBillingSource('shipping')
-    setCustomBillingAddresses([])
+    onAddCard({ lastFour, expiry: cardForm.expiry || '00/00', billingForm })
     setSelectedPayment('credit-card')
     setShowCardModal(false)
     setPaymentSectionOpen(false)
@@ -122,10 +136,7 @@ const PaymentPage = forwardRef(function PaymentPage(
       state: addressForm.state,
       country: addressForm.country,
     }
-    setCustomBillingAddresses(prev => {
-      setSelectedBillingSource(prev.length)
-      return [...prev, newAddress]
-    })
+    onAddAddress(newAddress)
     setCardData(prev => ({ ...prev, billingForm: newAddress }))
     setShowAddressModal(false)
     setBillingSectionOpen(false)
@@ -139,8 +150,6 @@ const PaymentPage = forwardRef(function PaymentPage(
 
   const selectSavedCard = (card) => {
     setCardData(card)
-    setSelectedBillingSource('shipping')
-    setCustomBillingAddresses([])
     setSelectedPayment('credit-card')
     setPaymentSectionOpen(false)
   }
@@ -206,7 +215,7 @@ const PaymentPage = forwardRef(function PaymentPage(
                       </div>
                     </button>
                   ))}
-                  <button className="payment-method-item" onClick={() => setShowCardModal(true)}>
+                  <button className="payment-method-item" onClick={() => openCardModal()}>
                     <input type="radio" className="shipping-radio" checked={false} readOnly />
                     <div className="payment-method-content">
                       <div className="payment-method-row">
@@ -221,7 +230,7 @@ const PaymentPage = forwardRef(function PaymentPage(
                   <button
                     key={id}
                     className="payment-method-item"
-                    onClick={() => id === 'credit-card' ? setShowCardModal(true) : selectPayment(id)}
+                    onClick={() => id === 'credit-card' ? openCardModal() : selectPayment(id)}
                   >
                     <input type="radio" className="shipping-radio" checked={selectedPayment === id} readOnly />
                     <div className="payment-method-content">
@@ -255,32 +264,25 @@ const PaymentPage = forwardRef(function PaymentPage(
             <p className="review-section-label">Billing Address</p>
             {billingSectionOpen ? (
               <div className="payment-method-list">
-                <button className="payment-method-item" onClick={() => {
-                  setSelectedBillingSource('shipping')
-                  setCardData(prev => ({ ...prev, billingForm: { ...shippingForm } }))
-                  setBillingSectionOpen(false)
-                }}>
-                  <input type="radio" className="shipping-radio" checked={selectedBillingSource === 'shipping'} readOnly />
-                  <div className="payment-method-content">
-                    <div className="payment-method-row">
-                      <span className="payment-method-name">{formatAddress(shippingForm)}</span>
-                    </div>
-                  </div>
-                </button>
-                {customBillingAddresses.map((addr, i) => (
-                  <button key={i} className="payment-method-item" onClick={() => {
-                    setSelectedBillingSource(i)
-                    setCardData(prev => ({ ...prev, billingForm: addr }))
-                    setBillingSectionOpen(false)
-                  }}>
-                    <input type="radio" className="shipping-radio" checked={selectedBillingSource === i} readOnly />
-                    <div className="payment-method-content">
-                      <div className="payment-method-row">
-                        <span className="payment-method-name">{formatAddress(addr)}</span>
+                {addresses.map((addr, i) => {
+                  const isSelected = cardData?.billingForm &&
+                    addr.addressLine1 === cardData.billingForm.addressLine1 &&
+                    addr.postalCode === cardData.billingForm.postalCode &&
+                    addr.name === cardData.billingForm.name
+                  return (
+                    <button key={i} className="payment-method-item" onClick={() => {
+                      setCardData(prev => ({ ...prev, billingForm: { ...addr } }))
+                      setBillingSectionOpen(false)
+                    }}>
+                      <input type="radio" className="shipping-radio" checked={!!isSelected} readOnly />
+                      <div className="payment-method-content">
+                        <div className="payment-method-row">
+                          <span className="payment-method-name">{formatAddress(addr)}</span>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  )
+                })}
                 <button className="payment-method-item" onClick={() => setShowAddressModal(true)}>
                   <input type="radio" className="shipping-radio" checked={false} readOnly />
                   <div className="payment-method-content">
@@ -428,11 +430,11 @@ const PaymentPage = forwardRef(function PaymentPage(
       )}
 
       {showCardModal && (
-        <div className="modal-overlay" onClick={() => setShowCardModal(false)}>
+        <div className="modal-overlay" onClick={() => { setShowCardModal(false); setCardForm(EMPTY_CARD_FORM) }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <p className="modal-title">Add New Card</p>
-              <button className="modal-close" onClick={() => setShowCardModal(false)}>
+              <button className="modal-close" onClick={() => { setShowCardModal(false); setCardForm(EMPTY_CARD_FORM) }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
@@ -475,96 +477,120 @@ const PaymentPage = forwardRef(function PaymentPage(
 
               <div className="modal-section">
                 <p className="form-section-title">Billing Address</p>
-                <div className="address-form">
-                  <div className="form-field-group">
-                    <div className="floating-field">
-                      <input
-                        type="text"
-                        className="text-input"
-                        value={cardForm.name}
-                        onChange={updateCardField('name')}
-                      />
-                      <label className="floating-label">Full Name <span className="field-required">*</span></label>
-                    </div>
-                    <button className="add-link">+ Add a company name</button>
+                {addresses.length > 0 && (
+                  <div className="payment-method-list">
+                    {addresses.map((addr, i) => (
+                      <button key={i} className="payment-method-item" onClick={() => setCardModalAddrIdx(i)}>
+                        <input type="radio" className="shipping-radio" checked={cardModalAddrIdx === i} readOnly />
+                        <div className="payment-method-content">
+                          <div className="payment-method-row">
+                            <span className="payment-method-name">{formatAddress(addr)}</span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                    <button className="payment-method-item" onClick={() => setCardModalAddrIdx('new')}>
+                      <input type="radio" className="shipping-radio" checked={cardModalAddrIdx === 'new'} readOnly />
+                      <div className="payment-method-content">
+                        <div className="payment-method-row">
+                          <span className="payment-method-name">New Address</span>
+                        </div>
+                      </div>
+                    </button>
                   </div>
-                  <div className="floating-field">
-                    <input
-                      type="tel"
-                      className="text-input"
-                      placeholder="+1 (123) 123-1234"
-                      value={cardForm.phone}
-                      onChange={updateCardField('phone')}
-                    />
-                    <label className="floating-label">Mobile phone <span className="field-required">*</span></label>
-                  </div>
-                  <div className="form-field-group">
-                    <div className="floating-field">
-                      <input
-                        type="text"
-                        className="text-input"
-                        value={cardForm.addressLine1}
-                        onChange={updateCardField('addressLine1')}
-                      />
-                      <label className="floating-label">Address Line 1</label>
-                    </div>
-                    <button className="add-link">+ Add address line 2</button>
-                  </div>
-                  <div className="form-row">
-                    <div className="floating-field">
-                      <input
-                        type="text"
-                        className="text-input"
-                        value={cardForm.city}
-                        onChange={updateCardField('city')}
-                      />
-                      <label className="floating-label">City <span className="field-required">*</span></label>
+                )}
+                {(addresses.length === 0 || cardModalAddrIdx === 'new') && (
+                  <div className="address-form">
+                    <div className="form-field-group">
+                      <div className="floating-field">
+                        <input
+                          type="text"
+                          className="text-input"
+                          value={cardForm.name}
+                          onChange={updateCardField('name')}
+                        />
+                        <label className="floating-label">Full Name <span className="field-required">*</span></label>
+                      </div>
+                      <button className="add-link">+ Add a company name</button>
                     </div>
                     <div className="floating-field">
                       <input
-                        type="text"
+                        type="tel"
                         className="text-input"
-                        value={cardForm.postalCode}
-                        onChange={updateCardField('postalCode')}
+                        placeholder="+1 (123) 123-1234"
+                        value={cardForm.phone}
+                        onChange={updateCardField('phone')}
                       />
-                      <label className="floating-label">Postal Code <span className="field-required">*</span></label>
+                      <label className="floating-label">Mobile phone <span className="field-required">*</span></label>
                     </div>
+                    <div className="form-field-group">
+                      <div className="floating-field">
+                        <input
+                          type="text"
+                          className="text-input"
+                          value={cardForm.addressLine1}
+                          onChange={updateCardField('addressLine1')}
+                        />
+                        <label className="floating-label">Address Line 1</label>
+                      </div>
+                      <button className="add-link">+ Add address line 2</button>
+                    </div>
+                    <div className="form-row">
+                      <div className="floating-field">
+                        <input
+                          type="text"
+                          className="text-input"
+                          value={cardForm.city}
+                          onChange={updateCardField('city')}
+                        />
+                        <label className="floating-label">City <span className="field-required">*</span></label>
+                      </div>
+                      <div className="floating-field">
+                        <input
+                          type="text"
+                          className="text-input"
+                          value={cardForm.postalCode}
+                          onChange={updateCardField('postalCode')}
+                        />
+                        <label className="floating-label">Postal Code <span className="field-required">*</span></label>
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="floating-field">
+                        <select
+                          className={`select-field${cardForm.state ? ' has-value' : ''}`}
+                          value={cardForm.state}
+                          onChange={updateCardField('state')}
+                        >
+                          <option value="">Select one</option>
+                          {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <label className="floating-label">State <span className="field-required">*</span></label>
+                      </div>
+                      <div className="floating-field">
+                        <select
+                          className={`select-field${cardForm.country ? ' has-value' : ''}`}
+                          value={cardForm.country}
+                          onChange={updateCardField('country')}
+                        >
+                          <option value="">Select one</option>
+                          <option value="US">United States</option>
+                          <option value="CA">Canada</option>
+                        </select>
+                        <label className="floating-label">Country <span className="field-required">*</span></label>
+                      </div>
+                    </div>
+                    <label className="save-address-row">
+                      <input
+                        type="checkbox"
+                        className="save-checkbox"
+                        checked={cardForm.saveCard}
+                        onChange={updateCardField('saveCard')}
+                      />
+                      <span className="save-address-label">Save this credit card for future use</span>
+                    </label>
                   </div>
-                  <div className="form-row">
-                    <div className="floating-field">
-                      <select
-                        className={`select-field${cardForm.state ? ' has-value' : ''}`}
-                        value={cardForm.state}
-                        onChange={updateCardField('state')}
-                      >
-                        <option value="">Select one</option>
-                        {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                      <label className="floating-label">State <span className="field-required">*</span></label>
-                    </div>
-                    <div className="floating-field">
-                      <select
-                        className={`select-field${cardForm.country ? ' has-value' : ''}`}
-                        value={cardForm.country}
-                        onChange={updateCardField('country')}
-                      >
-                        <option value="">Select one</option>
-                        <option value="US">United States</option>
-                        <option value="CA">Canada</option>
-                      </select>
-                      <label className="floating-label">Country <span className="field-required">*</span></label>
-                    </div>
-                  </div>
-                  <label className="save-address-row">
-                    <input
-                      type="checkbox"
-                      className="save-checkbox"
-                      checked={cardForm.saveCard}
-                      onChange={updateCardField('saveCard')}
-                    />
-                    <span className="save-address-label">Save this credit card for future use</span>
-                  </label>
-                </div>
+                )}
               </div>
             </div>
 

@@ -20,8 +20,8 @@ const formatAddress = (f) =>
     .filter(Boolean)
     .join(', ')
 
-export default function ShippingPage({ form, setForm, savedAddresses, onAddAddress, selectedShipping, setSelectedShipping, onContinue }) {
-  const hasSaved = savedAddresses.length > 0
+export default function ShippingPage({ form, setForm, addresses, onAddAddress, selectedShipping, setSelectedShipping, onContinue }) {
+  const hasSaved = addresses.length > 0
   const [selectedAddressIdx, setSelectedAddressIdx] = useState(hasSaved ? 0 : 'new')
   const [saveAddress, setSaveAddress] = useState(false)
 
@@ -42,7 +42,7 @@ export default function ShippingPage({ form, setForm, savedAddresses, onAddAddre
 
   const selectSaved = (i) => {
     setSelectedAddressIdx(i)
-    setForm({ ...savedAddresses[i] })
+    setForm({ ...addresses[i] })
   }
 
   const selectNew = () => {
@@ -96,7 +96,7 @@ export default function ShippingPage({ form, setForm, savedAddresses, onAddAddre
           <div className="address-section">
             <p className="form-section-title">Shipping Address</p>
             <div className="payment-method-list">
-              {savedAddresses.map((addr, i) => (
+              {addresses.map((addr, i) => (
                 <button key={i} className="payment-method-item" onClick={() => selectSaved(i)}>
                   <input
                     type="radio"

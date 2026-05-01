@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import CheckoutLayout from './components/CheckoutLayout'
 import PrototypeControls from './components/PrototypeControls'
 import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
 import PaymentPage from './pages/PaymentPage'
 import { USER_PROFILES } from './data/users'
-import { useRef } from 'react'
 
 const ORDER = {
   event: {
@@ -49,7 +48,7 @@ export default function App() {
   const [selectedShipping, setSelectedShipping] = useState(null)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [cardData, setCardData] = useState(null)
-  const [savedAddresses, setSavedAddresses] = useState([])
+  const [addresses, setAddresses] = useState([])
   const [savedCards, setSavedCards] = useState([])
   const paymentRef = useRef(null)
 
@@ -60,7 +59,7 @@ export default function App() {
     setSelectedShipping(null)
     setSelectedPayment(null)
     setCardData(null)
-    setSavedAddresses([])
+    setAddresses([])
     setSavedCards([])
   }
 
@@ -72,7 +71,7 @@ export default function App() {
   const handleLoginContinue = (e) => {
     const profile = USER_PROFILES[activeUser]
     setEmail(e)
-    setSavedAddresses([...profile.savedAddresses])
+    setAddresses([...profile.savedAddresses])
     setSavedCards([...profile.savedCards])
     if (profile.savedAddresses.length > 0) {
       setShippingForm({ ...profile.savedAddresses[0] })
@@ -83,7 +82,7 @@ export default function App() {
   }
 
   const handleAddAddress = (addr) => {
-    setSavedAddresses(prev => [...prev, addr])
+    setAddresses(prev => [...prev, addr])
   }
 
   const handleAddCard = (card) => {
@@ -131,7 +130,7 @@ export default function App() {
           <ShippingPage
             form={shippingForm}
             setForm={setShippingForm}
-            savedAddresses={savedAddresses}
+            addresses={addresses}
             onAddAddress={handleAddAddress}
             selectedShipping={selectedShipping}
             setSelectedShipping={setSelectedShipping}
@@ -151,6 +150,8 @@ export default function App() {
             shippingForm={shippingForm}
             cardData={cardData}
             setCardData={setCardData}
+            addresses={addresses}
+            onAddAddress={handleAddAddress}
             savedCards={savedCards}
             onAddCard={handleAddCard}
             fillData={fillData}
