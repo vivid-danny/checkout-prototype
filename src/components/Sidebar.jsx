@@ -74,7 +74,7 @@ function PriceBreakdown({ pricing, shippingMethod }) {
   )
 }
 
-export default function Sidebar({ event, pricing, ticketDetails, selectedShipping }) {
+export default function Sidebar({ event, pricing, ticketDetails, selectedShipping, ticketType }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-gallery">
@@ -108,10 +108,12 @@ export default function Sidebar({ event, pricing, ticketDetails, selectedShippin
           <p className="ticket-info-title">Seat Perks</p>
           <p className="ticket-info-desc">{ticketDetails.perks}</p>
         </div>
-        <div className="ticket-info-group">
-          <p className="ticket-info-title">{ticketDetails.delivery}</p>
-          <p className="ticket-info-desc">{ticketDetails.deliveryNote}</p>
-        </div>
+        {ticketType !== 'e-ticket' && (
+          <div className="ticket-info-group">
+            <p className="ticket-info-title">{ticketDetails.delivery}</p>
+            <p className="ticket-info-desc">{ticketDetails.deliveryNote}</p>
+          </div>
+        )}
         <div className="ticket-info-group">
           <p className="ticket-info-title">In Hand Date</p>
           <p className="ticket-info-desc">{ticketDetails.inHandDate}</p>

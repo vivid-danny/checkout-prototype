@@ -56,7 +56,7 @@ const EMPTY_ADDRESS_FORM = {
 }
 
 const PaymentPage = forwardRef(function PaymentPage(
-  { email, shippingForm, addresses, onAddAddress, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, onGoToLogin, onGoToShipping },
+  { email, shippingForm, addresses, onAddAddress, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, onGoToLogin, onGoToShipping, ticketType },
   ref
 ) {
   const [showCardModal, setShowCardModal] = useState(false)
@@ -179,13 +179,15 @@ const PaymentPage = forwardRef(function PaymentPage(
           </div>
         </div>
 
-        <div className="review-section review-payment-section">
-          <p className="review-section-label">Shipping Address</p>
-          <div className="review-section-row">
-            <p className="review-section-value">{formatAddress(shippingForm)}</p>
-            <button className="btn-update" onClick={onGoToShipping}>Update</button>
+        {ticketType !== 'e-ticket' && (
+          <div className="review-section review-payment-section">
+            <p className="review-section-label">Shipping Address</p>
+            <div className="review-section-row">
+              <p className="review-section-value">{formatAddress(shippingForm)}</p>
+              <button className="btn-update" onClick={onGoToShipping}>Update</button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="review-section review-payment-section">
           <p className="review-section-label">Payment Method</p>
@@ -362,10 +364,7 @@ const PaymentPage = forwardRef(function PaymentPage(
 
       <div className="review-cta">
         <p className="terms-text">
-          By clicking "Buy now", you agree to the <a href="#">Terms</a>,{' '}
-          <a href="#">Rewards Program Terms</a> and confirm that you are aware that you
-          are making a purchase on a resale marketplace and may be paying above face value
-          for tickets. All prices in USD. All sales are final.
+          By clicking "Buy now" you agree to the <a href="#">Terms and Conditions</a>. All sales are final.
         </p>
         <button className="btn-primary" disabled={!canBuy}>Buy now</button>
       </div>

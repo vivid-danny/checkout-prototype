@@ -31,9 +31,8 @@ const ORDER = {
 }
 
 const PROGRESS = {
-  login: 'Step 1 of 3',
-  shipping: 'Step 2 of 3',
-  payment: 'Step 3 of 3',
+  'hard-stock': { login: 'Step 1 of 3', shipping: 'Step 2 of 3', payment: 'Step 3 of 3' },
+  'e-ticket':   { login: 'Step 1 of 2', payment: 'Step 2 of 2' },
 }
 
 const EMPTY_FORM = {
@@ -42,6 +41,7 @@ const EMPTY_FORM = {
 
 export default function App() {
   const [activeUser, setActiveUser] = useState('new')
+  const [ticketType, setTicketType] = useState('hard-stock')
   const [page, setPage] = useState('login')
   const [email, setEmail] = useState('')
   const [shippingForm, setShippingForm] = useState(EMPTY_FORM)
@@ -68,17 +68,30 @@ export default function App() {
     reset()
   }
 
+  const handleTicketTypeChange = (type) => {
+    setTicketType(type)
+    reset()
+  }
+
   const handleLoginContinue = (e) => {
     const profile = USER_PROFILES[activeUser]
     setEmail(e)
     setAddresses([...profile.savedAddresses])
     setSavedCards([...profile.savedCards])
-    if (profile.savedAddresses.length > 0) {
-      setShippingForm({ ...profile.savedAddresses[0] })
+    if (ticketType === 'e-ticket') {
+      if (profile.savedCards.length > 0) {
+        setCardData({ ...profile.savedCards[0] })
+        setSelectedPayment('credit-card')
+      }
+      setPage('payment')
     } else {
-      setShippingForm(EMPTY_FORM)
+      if (profile.savedAddresses.length > 0) {
+        setShippingForm({ ...profile.savedAddresses[0] })
+      } else {
+        setShippingForm(EMPTY_FORM)
+      }
+      setPage('shipping')
     }
-    setPage('shipping')
   }
 
   const handleAddAddress = (addr) => {
@@ -114,11 +127,12 @@ export default function App() {
   return (
     <>
       <CheckoutLayout
-        progress={PROGRESS[page]}
+        progress={PROGRESS[ticketType][page]}
         event={ORDER.event}
         pricing={ORDER.pricing}
         ticketDetails={ORDER.ticketDetails}
         selectedShipping={page === 'payment' ? selectedShipping : null}
+        ticketType={ticketType}
       >
         {page === 'login' && (
           <LoginPage
@@ -159,6 +173,7 @@ export default function App() {
             setSelectedPayment={setSelectedPayment}
             onGoToLogin={() => setPage('login')}
             onGoToShipping={() => setPage('shipping')}
+            ticketType={ticketType}
           />
         )}
       </CheckoutLayout>
@@ -168,6 +183,8 @@ export default function App() {
         users={users}
         activeUser={activeUser}
         onUserChange={handleUserChange}
+        ticketType={ticketType}
+        onTicketTypeChange={handleTicketTypeChange}
       />
     </>
   )

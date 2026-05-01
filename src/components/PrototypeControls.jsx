@@ -1,10 +1,30 @@
-export default function PrototypeControls({ actions = [], onReset, users = [], activeUser, onUserChange }) {
+const TICKET_TYPES = [
+  { id: 'hard-stock', label: 'Hard Stock' },
+  { id: 'e-ticket', label: 'E-Tickets' },
+]
+
+export default function PrototypeControls({ actions = [], onReset, users = [], activeUser, onUserChange, ticketType, onTicketTypeChange }) {
   return (
     <div className="prototype-panel">
       <div className="prototype-panel-header">
         <span className="prototype-panel-title">Prototype</span>
       </div>
       <div className="prototype-panel-body">
+        <div className="prototype-user-section">
+          <span className="prototype-user-label">Ticket Type</span>
+          <div className="prototype-user-btns">
+            {TICKET_TYPES.map(({ id, label }) => (
+              <button
+                key={id}
+                className={`prototype-user-btn${ticketType === id ? ' prototype-user-btn--active' : ''}`}
+                onClick={() => onTicketTypeChange(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="prototype-panel-divider" />
         {users.length > 0 && (
           <>
             <div className="prototype-user-section">
