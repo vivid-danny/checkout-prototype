@@ -1228,6 +1228,12 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.modal-overlay--open {
+  opacity: 1;
 }
 
 .modal {
@@ -1237,6 +1243,14 @@ a {
   max-width: calc(100vw - 48px);
   overflow: hidden;
   box-shadow: 0 16px 48px rgba(4, 9, 44, 0.16);
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.modal--open {
+  opacity: 1;
+  transform: none;
 }
 
 .modal-header {
