@@ -126,7 +126,15 @@ export default function App() {
   }
 
   const handleUpdateAddress = (idx, updatedAddr) => {
+    const prevAddr = addresses[idx]
     setAddresses(prev => prev.map((a, i) => i === idx ? { ...updatedAddr, isNew: true } : a))
+    if (
+      prevAddr?.name === shippingForm.name &&
+      prevAddr?.addressLine1 === shippingForm.addressLine1 &&
+      prevAddr?.postalCode === shippingForm.postalCode
+    ) {
+      setShippingForm({ ...updatedAddr })
+    }
   }
 
   const handleAddCard = (card) => {
