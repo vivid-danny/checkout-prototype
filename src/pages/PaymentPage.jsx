@@ -84,7 +84,7 @@ const PaymentPage = forwardRef(function PaymentPage(
   const [purchaseAttempted, setPurchaseAttempted] = useState(false)
   const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS_FORM)
   const [cardModalAddrIdx, setCardModalAddrIdx] = useState('new')
-  const [cvvMode, setCvvMode] = useState(savedCards.length > 0 && selectedPayment === 'credit-card')
+  const [cvvMode, setCvvMode] = useState(savedCards.length > 0 && selectedPayment === 'credit-card' && !cardData?.cvv)
   const [cvvValue, setCvvValue] = useState('')
   const [editingAddressIdx, setEditingAddressIdx] = useState(null)
 
@@ -128,8 +128,9 @@ const PaymentPage = forwardRef(function PaymentPage(
       billingForm = hasBillingAddress ? cardBilling : { ...shippingForm }
       if (hasBillingAddress) onAddAddress(cardBilling)
     }
-    onAddCard({ lastFour, expiry: cardForm.expiry || '00/00', billingForm })
+    onAddCard({ lastFour, expiry: cardForm.expiry || '00/00', cvv: cardForm.cvv, billingForm })
     setSelectedPayment('credit-card')
+    setCvvMode(false)
     setShowCardModal(false)
     setPaymentSectionOpen(false)
     setBillingSectionOpen(false)
