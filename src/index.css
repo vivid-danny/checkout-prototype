@@ -6,29 +6,29 @@
   font-family: 'GT Walsheim';
   font-weight: 400;
   font-style: normal;
-  src: url('/GT-Walsheim-Regular.woff2') format('woff2'),
-       url('/GT-Walsheim-Regular.woff') format('woff');
+  src: url('/fonts/GT-Walsheim-Regular.woff2') format('woff2'),
+       url('/fonts/GT-Walsheim-Regular.woff') format('woff');
 }
 @font-face {
   font-family: 'GT Walsheim';
   font-weight: 500;
   font-style: normal;
-  src: url('/GT-Walsheim-Medium.woff2') format('woff2'),
-       url('/GT-Walsheim-Medium.woff') format('woff');
+  src: url('/fonts/GT-Walsheim-Medium.woff2') format('woff2'),
+       url('/fonts/GT-Walsheim-Medium.woff') format('woff');
 }
 @font-face {
   font-family: 'GT Walsheim';
   font-weight: 700;
   font-style: normal;
-  src: url('/GT-Walsheim-Bold.woff2') format('woff2'),
-       url('/GT-Walsheim-Bold.woff') format('woff');
+  src: url('/fonts/GT-Walsheim-Bold.woff2') format('woff2'),
+       url('/fonts/GT-Walsheim-Bold.woff') format('woff');
 }
 @font-face {
   font-family: 'GT Walsheim';
   font-weight: 900;
   font-style: normal;
-  src: url('/GT-Walsheim-Black.woff2') format('woff2'),
-       url('/GT-Walsheim-Black.woff') format('woff');
+  src: url('/fonts/GT-Walsheim-Black.woff2') format('woff2'),
+       url('/fonts/GT-Walsheim-Black.woff') format('woff');
 }
 
 /* ================================
@@ -1061,6 +1061,20 @@ a {
   color: var(--text-primary);
 }
 
+.review-section-label--error {
+  color: #dc1818;
+}
+
+.review-section-label-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.review-section-label-row--error svg {
+  flex-shrink: 0;
+}
+
 .review-section-row {
   display: flex;
   align-items: center;
@@ -1148,6 +1162,13 @@ a {
 .payment-method-name {
   font-size: 14px;
   font-weight: 400;
+  line-height: 21px;
+  color: var(--text-primary);
+}
+
+.address-shipping-label {
+  font-size: 14px;
+  font-weight: 700;
   line-height: 21px;
   color: var(--text-primary);
 }

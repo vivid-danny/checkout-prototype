@@ -8,6 +8,9 @@ const formatAddress = (f) =>
     .filter(Boolean)
     .join(', ')
 
+const isSameAddress = (a, b) =>
+  a.name === b.name && a.addressLine1 === b.addressLine1 && a.postalCode === b.postalCode
+
 const CreditCardIcon = () => (
   <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
     <rect x="0.5" y="0.5" width="31" height="19" rx="2.5" stroke="#717488" />
@@ -62,6 +65,12 @@ const ErrorIcon = () => (
   </svg>
 )
 
+const WarningIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3ZM12 4.46973C7.84111 4.46991 4.46973 7.84107 4.46973 12C4.46981 16.1589 7.84116 19.5301 12 19.5303C16.159 19.5303 19.5312 16.159 19.5312 12C19.5312 7.84096 16.159 4.46973 12 4.46973ZM12 14.5713C12.5584 14.5715 13.0105 15.0235 13.0107 15.5811C13.0107 16.139 12.5579 16.5918 12 16.5918C11.4423 16.5916 10.9902 16.1388 10.9902 15.5811C10.9905 15.0235 11.4424 14.5715 12 14.5713ZM12 6.30664C12.4058 6.30664 12.7354 6.63526 12.7354 7.04102V13.1025C12.7351 13.5081 12.4056 13.8369 12 13.8369C11.5945 13.8367 11.2659 13.508 11.2656 13.1025V7.04102C11.2656 6.63536 11.5944 6.30681 12 6.30664Z" fill="#DC1818"/>
+  </svg>
+)
+
 const PaymentPage = forwardRef(function PaymentPage(
   { email, shippingForm, addresses, onAddAddress, onUpdateAddress, cardData, setCardData, savedCards, onAddCard, fillData, selectedPayment, setSelectedPayment, ticketType, errorState },
   ref
@@ -72,12 +81,12 @@ const PaymentPage = forwardRef(function PaymentPage(
   const [paymentSectionOpen, setPaymentSectionOpen] = useState(errorState || !selectedPayment)
   const [billingSectionOpen, setBillingSectionOpen] = useState(errorState)
   const [cardForm, setCardForm] = useState(EMPTY_CARD_FORM)
+  const [purchaseAttempted, setPurchaseAttempted] = useState(false)
   const [addressForm, setAddressForm] = useState(EMPTY_ADDRESS_FORM)
   const [cardModalAddrIdx, setCardModalAddrIdx] = useState('new')
   const [cvvMode, setCvvMode] = useState(savedCards.length > 0 && selectedPayment === 'credit-card')
   const [cvvValue, setCvvValue] = useState('')
   const [editingAddressIdx, setEditingAddressIdx] = useState(null)
-  const [purchaseAttempted, setPurchaseAttempted] = useState(false)
 
   const openCardModal = () => {
     setCardModalAddrIdx(addresses.length > 0 ? 0 : 'new')
@@ -154,6 +163,7 @@ const PaymentPage = forwardRef(function PaymentPage(
     }
     if (editingAddressIdx !== null) {
       onUpdateAddress(editingAddressIdx, newAddress)
+      setCardData(prev => ({ ...prev, billingForm: newAddress }))
       setEditingAddressIdx(null)
     } else {
       onAddAddress(newAddress)
@@ -161,6 +171,7 @@ const PaymentPage = forwardRef(function PaymentPage(
     }
     setShowAddressModal(false)
     setBillingSectionOpen(false)
+    setPurchaseAttempted(false)
     setAddressForm(EMPTY_ADDRESS_FORM)
   }
 
@@ -363,7 +374,10 @@ const PaymentPage = forwardRef(function PaymentPage(
 
         {showBillingSection && (
           <div className="review-section review-payment-section">
-            <p className="review-section-label">Billing Address</p>
+            <div className={`review-section-label-row${errorState && purchaseAttempted ? ' review-section-label-row--error' : ''}`}>
+              {errorState && purchaseAttempted && <WarningIcon />}
+              <p className={`review-section-label${errorState && purchaseAttempted ? ' review-section-label--error' : ''}`}>Billing Address</p>
+            </div>
             {billingSectionOpen ? (
               <div className="payment-method-list">
                 {addresses.map((addr, i) => {
@@ -372,14 +386,17 @@ const PaymentPage = forwardRef(function PaymentPage(
                       <input type="radio" className="shipping-radio" checked={false} readOnly onClick={() => {
                         setCardData(prev => ({ ...prev, billingForm: { ...addr } }))
                         setBillingSectionOpen(false)
+                        setPurchaseAttempted(false)
                       }} />
                       <div className="payment-method-content" style={{ cursor: 'pointer' }} onClick={() => {
                         setCardData(prev => ({ ...prev, billingForm: { ...addr } }))
                         setBillingSectionOpen(false)
+                        setPurchaseAttempted(false)
                       }}>
-                        <div className="payment-method-row">
-                          <span className="payment-method-name">{formatAddress(addr)}</span>
-                        </div>
+                        {isSameAddress(addr, shippingForm) && (
+                          <span className="address-shipping-label">Same as shipping</span>
+                        )}
+                        <span className="payment-method-name">{formatAddress(addr)}</span>
                       </div>
                       {addr.isNew && (
                         <button className="btn-edit" onClick={(e) => { e.stopPropagation(); openEditAddressModal(addr, i) }}>
@@ -568,9 +585,10 @@ const PaymentPage = forwardRef(function PaymentPage(
                   <button key={i} className="payment-method-item" onClick={() => setCardModalAddrIdx(i)}>
                     <input type="radio" className="shipping-radio" checked={cardModalAddrIdx === i} readOnly />
                     <div className="payment-method-content">
-                      <div className="payment-method-row">
-                        <span className="payment-method-name">{formatAddress(addr)}</span>
-                      </div>
+                      {isSameAddress(addr, shippingForm) && (
+                        <span className="address-shipping-label">Same as shipping</span>
+                      )}
+                      <span className="payment-method-name">{formatAddress(addr)}</span>
                     </div>
                   </button>
                 ))}
