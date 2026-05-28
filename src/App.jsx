@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Agentation } from 'agentation'
 import CheckoutLayout from './components/CheckoutLayout'
 import PrototypeControls from './components/PrototypeControls'
 import LoginPage from './pages/LoginPage'
@@ -240,6 +241,7 @@ export default function App() {
         ticketType={ticketType}
         onTicketTypeChange={handleTicketTypeChange}
       />
+      {import.meta.env.DEV && <Agentation />}
     </>
   )
 }
