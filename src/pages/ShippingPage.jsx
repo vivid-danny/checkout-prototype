@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import Modal from '../components/Modal'
 import { US_STATES } from '../utils/address'
 
 const EMPTY_FORM = {
   name: '', phone: '', addressLine1: '', city: '', postalCode: '', state: '', country: '',
 }
+
+const EMPTY_MODAL_FORM = { ...EMPTY_FORM, saveAddress: true }
 
 const formatAddress = (f) =>
   [f.name, f.addressLine1, f.city, f.state, f.postalCode]
@@ -12,32 +15,47 @@ const formatAddress = (f) =>
 
 export default function ShippingPage({ form, setForm, addresses, onAddAddress, selectedShipping, setSelectedShipping, onContinue }) {
   const hasSaved = addresses.length > 0
-  const [selectedAddressIdx, setSelectedAddressIdx] = useState(hasSaved ? 0 : 'new')
+  const [selectedAddressIdx, setSelectedAddressIdx] = useState(hasSaved ? 0 : null)
   const [saveAddress, setSaveAddress] = useState(true)
+  const [showAddressModal, setShowAddressModal] = useState(false)
+  const [modalForm, setModalForm] = useState(EMPTY_MODAL_FORM)
 
   const showAddressForm = selectedShipping !== null
   const showSavedList = showAddressForm && hasSaved
-  const showForm = showAddressForm && (!hasSaved || selectedAddressIdx === 'new')
+  const showForm = showAddressForm && !hasSaved
 
   const isFormValid = form.name.trim() && form.phone.trim() && form.city.trim() &&
     form.postalCode.trim() && form.state && form.country
 
-  const canContinue = showAddressForm && (selectedAddressIdx !== 'new' || isFormValid)
+  const canContinue = showAddressForm && (hasSaved || isFormValid)
 
   const updateField = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }))
+
+  const updateModalField = (field) => (e) =>
+    setModalForm(prev => ({ ...prev, [field]: field === 'saveAddress' ? e.target.checked : e.target.value }))
 
   const selectSaved = (i) => {
     setSelectedAddressIdx(i)
     setForm({ ...addresses[i] })
   }
 
-  const selectNew = () => {
-    setSelectedAddressIdx('new')
-    setForm({ ...EMPTY_FORM })
+  const openAddressModal = () => {
+    setModalForm(EMPTY_MODAL_FORM)
+    setShowAddressModal(true)
+  }
+
+  const handleAddAddressFromModal = () => {
+    const { saveAddress: _save, ...newAddr } = modalForm
+    const newIdx = addresses.length
+    onAddAddress(newAddr)
+    setForm({ ...newAddr })
+    setSelectedAddressIdx(newIdx)
+    setShowAddressModal(false)
+    setModalForm(EMPTY_MODAL_FORM)
   }
 
   const handleContinue = () => {
-    if (selectedAddressIdx === 'new') {
+    if (!hasSaved) {
       onAddAddress({ ...form })
     }
     onContinue()
@@ -97,11 +115,11 @@ export default function ShippingPage({ form, setForm, addresses, onAddAddress, s
                   </div>
                 </button>
               ))}
-              <button className="payment-method-item" onClick={selectNew}>
+              <button className="payment-method-item" onClick={openAddressModal}>
                 <input
                   type="radio"
                   className="shipping-radio"
-                  checked={selectedAddressIdx === 'new'}
+                  checked={false}
                   readOnly
                 />
                 <div className="payment-method-content">
@@ -230,6 +248,108 @@ export default function ShippingPage({ form, setForm, addresses, onAddAddress, s
       >
         Continue
       </button>
+
+      {showAddressModal && (
+        <Modal
+          title="Add New Address"
+          onClose={() => { setShowAddressModal(false); setModalForm(EMPTY_MODAL_FORM) }}
+          onSubmit={handleAddAddressFromModal}
+          submitLabel="Add Address"
+        >
+          <div className="modal-section">
+            <div className="address-form">
+              <div className="form-field-group">
+                <div className="floating-field">
+                  <input
+                    type="text"
+                    className="text-input"
+                    value={modalForm.name}
+                    onChange={updateModalField('name')}
+                  />
+                  <label className="floating-label">Full Name <span className="field-required">*</span></label>
+                </div>
+                <button className="add-link">+ Add a company name</button>
+              </div>
+              <div className="floating-field">
+                <input
+                  type="tel"
+                  className="text-input"
+                  placeholder="+1 (123) 123-1234"
+                  value={modalForm.phone}
+                  onChange={updateModalField('phone')}
+                />
+                <label className="floating-label">Mobile phone <span className="field-required">*</span></label>
+              </div>
+              <div className="form-field-group">
+                <div className="floating-field">
+                  <input
+                    type="text"
+                    className="text-input"
+                    value={modalForm.addressLine1}
+                    onChange={updateModalField('addressLine1')}
+                  />
+                  <label className="floating-label">Address Line 1</label>
+                </div>
+                <button className="add-link">+ Add address line 2</button>
+              </div>
+              <div className="form-row">
+                <div className="floating-field">
+                  <input
+                    type="text"
+                    className="text-input"
+                    value={modalForm.city}
+                    onChange={updateModalField('city')}
+                  />
+                  <label className="floating-label">City <span className="field-required">*</span></label>
+                </div>
+                <div className="floating-field">
+                  <input
+                    type="text"
+                    className="text-input"
+                    value={modalForm.postalCode}
+                    onChange={updateModalField('postalCode')}
+                  />
+                  <label className="floating-label">Postal Code <span className="field-required">*</span></label>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="floating-field">
+                  <select
+                    className={`select-field${modalForm.state ? ' has-value' : ''}`}
+                    value={modalForm.state}
+                    onChange={updateModalField('state')}
+                  >
+                    <option value="">Select one</option>
+                    {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <label className="floating-label">State <span className="field-required">*</span></label>
+                </div>
+                <div className="floating-field">
+                  <select
+                    className={`select-field${modalForm.country ? ' has-value' : ''}`}
+                    value={modalForm.country}
+                    onChange={updateModalField('country')}
+                  >
+                    <option value="">Select one</option>
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                  </select>
+                  <label className="floating-label">Country <span className="field-required">*</span></label>
+                </div>
+              </div>
+              <label className="save-address-row">
+                <input
+                  type="checkbox"
+                  className="save-checkbox"
+                  checked={modalForm.saveAddress}
+                  onChange={updateModalField('saveAddress')}
+                />
+                <span className="save-address-label">Save this address for future use</span>
+              </label>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
