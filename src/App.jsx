@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Agentation } from 'agentation'
 import CheckoutLayout from './components/CheckoutLayout'
@@ -78,7 +78,18 @@ export default function App() {
   const [cardData, setCardData] = useState(null)
   const [addresses, setAddresses] = useState([])
   const [savedCards, setSavedCards] = useState([])
+  const [showPrototypeControls, setShowPrototypeControls] = useState(false)
   const paymentRef = useRef(null)
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.shiftKey && e.key.toLowerCase() === 'h') {
+        setShowPrototypeControls((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const reset = () => {
     setEmail('')
@@ -232,15 +243,17 @@ export default function App() {
         </Route>
         <Route path="*" element={<Navigate to="/checkout/login" replace />} />
       </Routes>
-      <PrototypeControls
-        actions={controls[currentPage] ?? []}
-        onReset={reset}
-        users={users}
-        activeUser={activeUser}
-        onUserChange={handleUserChange}
-        ticketType={ticketType}
-        onTicketTypeChange={handleTicketTypeChange}
-      />
+      {showPrototypeControls && (
+        <PrototypeControls
+          actions={controls[currentPage] ?? []}
+          onReset={reset}
+          users={users}
+          activeUser={activeUser}
+          onUserChange={handleUserChange}
+          ticketType={ticketType}
+          onTicketTypeChange={handleTicketTypeChange}
+        />
+      )}
       {import.meta.env.DEV && <Agentation />}
     </>
   )
