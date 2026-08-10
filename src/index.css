@@ -1484,7 +1484,7 @@ a {
 .confirmation-timeline-item:not(:last-child)::before {
   content: '';
   position: absolute;
-  left: 9px;
+  left: 7px;
   top: 10px;
   height: calc(100% + 16px);
   width: 2px;
@@ -1504,8 +1504,10 @@ a {
   position: relative;
   z-index: 1;
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
+  /* Keeps the dot's center on the first text line now that it is smaller than the line box. */
+  margin-top: 2px;
   border-radius: 50%;
   background: #fff;
   border: 2px solid var(--gray-200);
@@ -1730,4 +1732,229 @@ a {
   bottom: 8px;
   right: 8px;
   gap: 4px;
+}
+
+/* ================================
+   CONFIRMATION PAGE — V2 (seed 2)
+================================ */
+
+/* ---- Gradient hero ---- */
+
+.v2-hero {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  padding: 48px 120px;
+  background-image: linear-gradient(
+    84.815deg,
+    #14378a 0%,
+    #29216e 16.827%,
+    #3a1f6a 81.264%,
+    #92138c 100%
+  );
+}
+
+.v2-hero-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.v2-hero-poly {
+  position: absolute;
+  display: block;
+}
+
+.v2-hero-poly--large {
+  top: 0;
+  right: 44px;
+  width: 194px;
+  height: 168px;
+}
+
+.v2-hero-poly--small {
+  top: 84px;
+  right: -4px;
+  width: 97px;
+  height: 84px;
+}
+
+.v2-hero-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.v2-hero-image {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: url("/img.jpg") center / cover no-repeat;
+}
+
+.v2-hero-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.v2-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: #e6ffed;
+  color: #008442;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 21px;
+  white-space: nowrap;
+}
+
+.v2-badge-icon {
+  width: 10px;
+  height: 10px;
+  margin: 3px;
+}
+
+.v2-hero-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.v2-hero-title {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 40px;
+  color: #fff;
+}
+
+.v2-hero-subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #fff;
+}
+
+/* ---- Main content stack ---- */
+
+.v2-content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.v2-columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 80px;
+}
+
+/* ---- Gray panel: timeline + app download ---- */
+
+.v2-panel {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 32px 32px 32px 48px;
+  border-radius: 16px;
+  background: var(--gray-50);
+}
+
+.v2-panel-col {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Every step reads as complete in this variant, so all dots are filled. */
+.v2-timeline .confirmation-timeline-dot {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.v2-app-card {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 24px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid rgba(4, 9, 44, 0.1);
+}
+
+.v2-app-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.v2-app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.v2-app-heading-accent {
+  color: var(--primary);
+  font-style: italic;
+}
+
+/* ---- FAQ (open rows, dashed separators) ---- */
+
+.v2-faq-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.v2-faq-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 16px 16px 0;
+  border-bottom: 1px dashed var(--gray-200);
+}
+
+.v2-faq-item:first-child {
+  border-top: 1px dashed var(--gray-200);
+}
+
+.v2-faq-question {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--text-primary);
+}
+
+/* ---- Offers carousel ---- */
+
+.v2-offers {
+  gap: 16px;
+}
+
+/* ---- Order summary (no gallery, no dividers) ---- */
+
+.v2-sidebar {
+  gap: 16px;
 }

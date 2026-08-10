@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
 import PaymentPage from './pages/PaymentPage'
 import ConfirmationPage from './pages/ConfirmationPage'
+import ConfirmationPageV2 from './pages/ConfirmationPageV2'
 import { USER_PROFILES, SEED_CHECKOUTS } from './data/users'
 
 const EVENT = {
@@ -73,7 +74,8 @@ export default function App() {
   const location = useLocation()
   const currentPage = location.pathname.split('/').pop()
 
-  const seedKey = import.meta.env.DEV ? new URLSearchParams(location.search).get('seed') : null
+  // Not dev-gated: the ?seed= links are shared with user-testing participants on the deployed build.
+  const seedKey = new URLSearchParams(location.search).get('seed')
   const seedData = seedKey ? SEED_CHECKOUTS[seedKey] : null
 
   const [activeUser, setActiveUser] = useState('new')
@@ -182,6 +184,9 @@ export default function App() {
 
   const users = Object.entries(USER_PROFILES).map(([id, p]) => ({ id, label: p.label }))
 
+  // Seed 2 gets its own confirmation experience; every other seed keeps the original.
+  const ConfirmationVariant = seedKey === '2' ? ConfirmationPageV2 : ConfirmationPage
+
   return (
     <>
       <Routes>
@@ -251,7 +256,7 @@ export default function App() {
         <Route
           path="/checkout/confirmation"
           element={
-            <ConfirmationPage
+            <ConfirmationVariant
               email={email}
               shippingForm={shippingForm}
               selectedPayment={selectedPayment}
