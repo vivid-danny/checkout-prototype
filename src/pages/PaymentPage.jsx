@@ -1,12 +1,7 @@
 import { useState, forwardRef, useImperativeHandle } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Modal from '../components/Modal'
-import { US_STATES, COUNTRY_LABELS } from '../utils/address'
-
-const formatAddress = (f) =>
-  [f.name, f.addressLine1, f.city, f.state, f.postalCode, COUNTRY_LABELS[f.country] || f.country]
-    .filter(Boolean)
-    .join(', ')
+import { US_STATES, formatAddress } from '../utils/address'
 
 const isSameAddress = (a, b) =>
   a.name === b.name && a.addressLine1 === b.addressLine1 && a.postalCode === b.postalCode
@@ -76,6 +71,7 @@ const PaymentPage = forwardRef(function PaymentPage(
   ref
 ) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [showCardModal, setShowCardModal] = useState(false)
   const [showAddressModal, setShowAddressModal] = useState(false)
   const [paymentSectionOpen, setPaymentSectionOpen] = useState(errorState || !selectedPayment)
@@ -433,7 +429,7 @@ const PaymentPage = forwardRef(function PaymentPage(
         <p className="terms-text">
           By clicking "Buy now" you agree to the <a href="#">Terms and Conditions</a>. All sales are final.
         </p>
-        <button className="btn-primary" disabled={!canBuy} onClick={() => { if (errorState) setPurchaseAttempted(true) }}>Buy now</button>
+        <button className="btn-primary" disabled={!canBuy} onClick={() => { if (errorState) { setPurchaseAttempted(true) } else { navigate(`/checkout/confirmation${location.search}`) } }}>Buy now</button>
       </div>
 
       {showAddressModal && (

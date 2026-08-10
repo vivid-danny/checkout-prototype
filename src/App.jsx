@@ -6,6 +6,7 @@ import PrototypeControls from './components/PrototypeControls'
 import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
 import PaymentPage from './pages/PaymentPage'
+import ConfirmationPage from './pages/ConfirmationPage'
 import { USER_PROFILES, SEED_CHECKOUTS } from './data/users'
 
 const EVENT = {
@@ -23,6 +24,7 @@ const TICKET_DETAILS_BASE = {
 const ORDERS = {
   'hard-stock': {
     event: EVENT,
+    orderNumber: '31675173',
     pricing: {
       dealScore: 7,
       dealLabel: 'Good Deal',
@@ -35,10 +37,12 @@ const ORDERS = {
       delivery: 'Shipped via UPS',
       deliveryNote: 'Tickets delivered to your address',
       inHandDate: 'Tickets delivered by January 13, 2026',
+      inHandBy: 'January 13, 2026',
     },
   },
   'e-ticket': {
     event: EVENT,
+    orderNumber: '31675298',
     pricing: {
       dealScore: 10,
       dealLabel: 'Fantastic Deal',
@@ -244,6 +248,22 @@ export default function App() {
             }
           />
         </Route>
+        <Route
+          path="/checkout/confirmation"
+          element={
+            <ConfirmationPage
+              email={email}
+              shippingForm={shippingForm}
+              selectedPayment={selectedPayment}
+              cardData={cardData}
+              event={ORDERS[ticketType].event}
+              pricing={ORDERS[ticketType].pricing}
+              ticketDetails={ORDERS[ticketType].ticketDetails}
+              orderNumber={ORDERS[ticketType].orderNumber}
+              ticketType={ticketType}
+            />
+          }
+        />
         <Route path="*" element={<Navigate to="/checkout/login" replace />} />
       </Routes>
       {showPrototypeControls && (
