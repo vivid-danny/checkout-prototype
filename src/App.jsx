@@ -6,7 +6,7 @@ import PrototypeControls from './components/PrototypeControls'
 import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
 import PaymentPage from './pages/PaymentPage'
-import { USER_PROFILES } from './data/users'
+import { USER_PROFILES, SEED_CHECKOUT } from './data/users'
 
 const EVENT = {
   name: 'New York Knicks at Chicago Bulls',
@@ -69,13 +69,15 @@ export default function App() {
   const location = useLocation()
   const currentPage = location.pathname.split('/').pop()
 
+  const isSeeded = import.meta.env.DEV && new URLSearchParams(location.search).get('seed') === '1'
+
   const [activeUser, setActiveUser] = useState('new')
   const [ticketType, setTicketType] = useState('hard-stock')
-  const [email, setEmail] = useState('')
-  const [shippingForm, setShippingForm] = useState(EMPTY_FORM)
+  const [email, setEmail] = useState(() => isSeeded ? SEED_CHECKOUT.email : '')
+  const [shippingForm, setShippingForm] = useState(() => isSeeded ? { ...SEED_CHECKOUT.shippingForm } : EMPTY_FORM)
   const [selectedShipping, setSelectedShipping] = useState(null)
-  const [selectedPayment, setSelectedPayment] = useState(null)
-  const [cardData, setCardData] = useState(null)
+  const [selectedPayment, setSelectedPayment] = useState(() => isSeeded ? SEED_CHECKOUT.selectedPayment : null)
+  const [cardData, setCardData] = useState(() => isSeeded ? SEED_CHECKOUT.cardData : null)
   const [addresses, setAddresses] = useState([])
   const [savedCards, setSavedCards] = useState([])
   const [showPrototypeControls, setShowPrototypeControls] = useState(false)
