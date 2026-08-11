@@ -266,6 +266,9 @@ export default function App() {
               ticketDetails={ORDERS[ticketType].ticketDetails}
               orderNumber={ORDERS[ticketType].orderNumber}
               ticketType={ticketType}
+              // Seed 1 gets the forced offer modals; seed 2 shows them inline as a carousel, and
+              // the no-seed page stays clean so it can be demoed without clicking through four.
+              showOfferModals={seedKey === '1'}
             />
           }
         />

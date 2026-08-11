@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import OfferModalSequence from '../components/OfferModalSequence'
+import { OFFERS } from '../data/offers'
 import { formatAddress } from '../utils/address'
 
 const ChevronLeft = () => (
@@ -28,9 +31,6 @@ const PAYMENT_LABELS = {
   bnpl: 'Buy Now, Pay Later by PayPal',
 }
 
-// Promotional offers are hidden pending a design revisit — flip to true to restore.
-const SHOW_PROMOS = false
-
 const FAQ_ITEMS = [
   'How will I get my tickets?',
   'How can I track my order status?',
@@ -47,7 +47,10 @@ export default function ConfirmationPage({
   ticketDetails,
   orderNumber,
   ticketType,
+  showOfferModals,
 }) {
+  // Never reset, so the gauntlet runs once per page load; a reload replays it between sessions.
+  const [offersDone, setOffersDone] = useState(false)
   const isShipped = ticketType !== 'e-ticket'
 
   const paymentLabel = selectedPayment === 'credit-card' && cardData
@@ -113,31 +116,6 @@ export default function ConfirmationPage({
               </div>
               <img src="/confirmation-qr.svg" alt="QR code to download the Vivid Seats app" className="confirmation-app-qr" />
             </div>
-
-            {SHOW_PROMOS && (
-            <div className="confirmation-promo">
-              <div className="confirmation-promo-header">
-                <p className="confirmation-heading">Promotional offers just for you</p>
-                <div className="confirmation-promo-nav">
-                  <button className="confirmation-icon-btn" aria-label="Previous offer"><ChevronLeft /></button>
-                  <button className="confirmation-icon-btn" aria-label="Next offer"><ChevronRight /></button>
-                </div>
-              </div>
-              <div className="confirmation-promo-card">
-                <div className="confirmation-promo-content">
-                  <div className="confirmation-promo-text">
-                    <p className="confirmation-promo-headline">Get over 100 million songs on Apple Music free for 1 month!</p>
-                    <p className="confirmation-promo-body">You'll never hear a commercial and you can download anything for offline listening.</p>
-                  </div>
-                  <img src="/apple-music-logo.png" alt="Apple Music" className="confirmation-promo-logo" />
-                </div>
-                <div className="confirmation-promo-cta">
-                  <button className="confirmation-promo-btn confirmation-promo-btn--primary">Join Now</button>
-                  <button className="confirmation-promo-btn confirmation-promo-btn--secondary">No Thanks</button>
-                </div>
-              </div>
-            </div>
-            )}
 
             <div className="confirmation-divider" />
 
@@ -216,6 +194,9 @@ export default function ConfirmationPage({
         </div>
       </main>
       <Footer />
+      {showOfferModals && !offersDone && (
+        <OfferModalSequence offers={OFFERS} onComplete={() => setOffersDone(true)} />
+      )}
     </div>
   )
 }

@@ -1688,6 +1688,36 @@ a {
   color: var(--text-primary);
 }
 
+/* ---- Forced offer modal (seed 1) ---- */
+
+/* The sequence focuses its panel on mount so keyboard users aren't stranded behind the dialog.
+   A focus ring around the whole panel conveys nothing and reads as a stray blue border, so it's
+   suppressed here only — the buttons inside keep their own focus styles. Scoped by [tabindex] so
+   the other modals (which don't set it) are untouched. */
+.modal[tabindex]:focus {
+  outline: none;
+}
+
+/* Reuses .modal-overlay and .modal so the dim, width, shadow and entrance timing match every
+   other modal. Only this headerless body is new: .modal-scroll-body's border-bottom, 40px gap
+   and max-height/overflow are all wrong for an offer panel. */
+.offer-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+
+/* Only the panel's contents cross-fade between offers — the overlay and panel are never
+   re-classed, so the backdrop can't flicker and the panel can't move. pointer-events blocks
+   clicks on the invisible buttons mid-swap. */
+.offer-modal-body--fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ---- FAQ ---- */
 
 .confirmation-faq {
