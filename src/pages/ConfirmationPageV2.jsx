@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import ActionRequiredModal from '../components/ActionRequiredModal'
 import OfferCarousel from '../components/OfferCarousel'
 import { OFFERS } from '../data/offers'
 import { formatAddress } from '../utils/address'
@@ -45,6 +47,7 @@ export default function ConfirmationPageV2({
     + pricing.fees.unitPrice * pricing.fees.count
     + pricing.taxes
 
+  const [actionModalDone, setActionModalDone] = useState(false)
   const [venueName, ...cityParts] = event.venue.split(', ')
   const venueLocation = cityParts.join(', ')
 
@@ -184,6 +187,9 @@ export default function ConfirmationPageV2({
       </main>
 
       <Footer />
+      {!actionModalDone && (
+        <ActionRequiredModal onClose={() => setActionModalDone(true)} />
+      )}
     </div>
   )
 }
