@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import OfferModalSequence from '../components/OfferModalSequence'
+import ActionRequiredModal from '../components/ActionRequiredModal'
 import { OFFERS } from '../data/offers'
 import { formatAddress } from '../utils/address'
 
@@ -51,6 +52,7 @@ export default function ConfirmationPage({
 }) {
   // Never reset, so the gauntlet runs once per page load; a reload replays it between sessions.
   const [offersDone, setOffersDone] = useState(false)
+  const [actionModalDone, setActionModalDone] = useState(false)
   const isShipped = ticketType !== 'e-ticket'
 
   const paymentLabel = selectedPayment === 'credit-card' && cardData
@@ -196,6 +198,9 @@ export default function ConfirmationPage({
       <Footer />
       {showOfferModals && !offersDone && (
         <OfferModalSequence offers={OFFERS} onComplete={() => setOffersDone(true)} />
+      )}
+      {showOfferModals && offersDone && !actionModalDone && (
+        <ActionRequiredModal onClose={() => setActionModalDone(true)} />
       )}
     </div>
   )
