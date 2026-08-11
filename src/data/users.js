@@ -1,3 +1,24 @@
+export const SEED_CHECKOUTS = {
+  '1': {
+    email: 'jdoe@example.com',
+    shippingForm: {
+      name: 'John Doe', phone: '(312) 555-0192', addressLine1: '233 S Wacker Dr',
+      city: 'Chicago', postalCode: '60606', state: 'Illinois', country: 'US',
+    },
+    selectedPayment: 'apple-pay',
+    cardData: null,
+  },
+  '2': {
+    email: 'jdoe@example.com',
+    shippingForm: {
+      name: 'John Doe', phone: '(312) 555-0192', addressLine1: '233 S Wacker Dr',
+      city: 'Chicago', postalCode: '60606', state: 'Illinois', country: 'US',
+    },
+    selectedPayment: 'apple-pay',
+    cardData: null,
+  },
+}
+
 export const USER_PROFILES = {
   new: {
     label: 'New Customer',

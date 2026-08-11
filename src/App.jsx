@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Agentation } from 'agentation'
 import CheckoutLayout from './components/CheckoutLayout'
@@ -6,7 +6,9 @@ import PrototypeControls from './components/PrototypeControls'
 import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
 import PaymentPage from './pages/PaymentPage'
-import { USER_PROFILES } from './data/users'
+import ConfirmationPage from './pages/ConfirmationPage'
+import ConfirmationPageV2 from './pages/ConfirmationPageV2'
+import { USER_PROFILES, SEED_CHECKOUTS } from './data/users'
 
 const EVENT = {
   name: 'New York Knicks at Chicago Bulls',
@@ -23,6 +25,7 @@ const TICKET_DETAILS_BASE = {
 const ORDERS = {
   'hard-stock': {
     event: EVENT,
+    orderNumber: '31675173',
     pricing: {
       dealScore: 7,
       dealLabel: 'Good Deal',
@@ -35,10 +38,12 @@ const ORDERS = {
       delivery: 'Shipped via UPS',
       deliveryNote: 'Tickets delivered to your address',
       inHandDate: 'Tickets delivered by January 13, 2026',
+      inHandBy: 'January 13, 2026',
     },
   },
   'e-ticket': {
     event: EVENT,
+    orderNumber: '31675298',
     pricing: {
       dealScore: 10,
       dealLabel: 'Fantastic Deal',
@@ -69,16 +74,31 @@ export default function App() {
   const location = useLocation()
   const currentPage = location.pathname.split('/').pop()
 
+  // Not dev-gated: the ?seed= links are shared with user-testing participants on the deployed build.
+  const seedKey = new URLSearchParams(location.search).get('seed')
+  const seedData = seedKey ? SEED_CHECKOUTS[seedKey] : null
+
   const [activeUser, setActiveUser] = useState('new')
   const [ticketType, setTicketType] = useState('hard-stock')
-  const [email, setEmail] = useState('')
-  const [shippingForm, setShippingForm] = useState(EMPTY_FORM)
+  const [email, setEmail] = useState(() => seedData ? seedData.email : '')
+  const [shippingForm, setShippingForm] = useState(() => seedData ? { ...seedData.shippingForm } : EMPTY_FORM)
   const [selectedShipping, setSelectedShipping] = useState(null)
-  const [selectedPayment, setSelectedPayment] = useState(null)
-  const [cardData, setCardData] = useState(null)
+  const [selectedPayment, setSelectedPayment] = useState(() => seedData ? seedData.selectedPayment : null)
+  const [cardData, setCardData] = useState(() => seedData ? seedData.cardData : null)
   const [addresses, setAddresses] = useState([])
   const [savedCards, setSavedCards] = useState([])
+  const [showPrototypeControls, setShowPrototypeControls] = useState(false)
   const paymentRef = useRef(null)
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.shiftKey && e.key.toLowerCase() === 'h') {
+        setShowPrototypeControls((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const reset = () => {
     setEmail('')
@@ -164,6 +184,9 @@ export default function App() {
 
   const users = Object.entries(USER_PROFILES).map(([id, p]) => ({ id, label: p.label }))
 
+  // Seed 2 gets its own confirmation experience; every other seed keeps the original.
+  const ConfirmationVariant = seedKey === '2' ? ConfirmationPageV2 : ConfirmationPage
+
   return (
     <>
       <Routes>
@@ -230,17 +253,38 @@ export default function App() {
             }
           />
         </Route>
+        <Route
+          path="/checkout/confirmation"
+          element={
+            <ConfirmationVariant
+              email={email}
+              shippingForm={shippingForm}
+              selectedPayment={selectedPayment}
+              cardData={cardData}
+              event={ORDERS[ticketType].event}
+              pricing={ORDERS[ticketType].pricing}
+              ticketDetails={ORDERS[ticketType].ticketDetails}
+              orderNumber={ORDERS[ticketType].orderNumber}
+              ticketType={ticketType}
+              // Seed 1 gets the forced offer modals; seed 2 shows them inline as a carousel, and
+              // the no-seed page stays clean so it can be demoed without clicking through four.
+              showOfferModals={seedKey === '1'}
+            />
+          }
+        />
         <Route path="*" element={<Navigate to="/checkout/login" replace />} />
       </Routes>
-      <PrototypeControls
-        actions={controls[currentPage] ?? []}
-        onReset={reset}
-        users={users}
-        activeUser={activeUser}
-        onUserChange={handleUserChange}
-        ticketType={ticketType}
-        onTicketTypeChange={handleTicketTypeChange}
-      />
+      {showPrototypeControls && (
+        <PrototypeControls
+          actions={controls[currentPage] ?? []}
+          onReset={reset}
+          users={users}
+          activeUser={activeUser}
+          onUserChange={handleUserChange}
+          ticketType={ticketType}
+          onTicketTypeChange={handleTicketTypeChange}
+        />
+      )}
       {import.meta.env.DEV && <Agentation />}
     </>
   )

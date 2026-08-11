@@ -10,3 +10,8 @@ export const US_STATES = [
 ]
 
 export const COUNTRY_LABELS = { US: 'United States', CA: 'Canada' }
+
+export const formatAddress = (f) =>
+  [f.name, f.addressLine1, f.city, f.state, f.postalCode, COUNTRY_LABELS[f.country] || f.country]
+    .filter(Boolean)
+    .join(', ')
