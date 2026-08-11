@@ -1,10 +1,13 @@
-import { useState, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Modal from '../components/Modal'
 import { US_STATES, formatAddress } from '../utils/address'
 
 const isSameAddress = (a, b) =>
   a.name === b.name && a.addressLine1 === b.addressLine1 && a.postalCode === b.postalCode
+
+// Fake latency so submitting an order feels like something happened.
+const PROCESSING_MS = 3000
 
 const CreditCardIcon = () => (
   <svg width="32" height="20" viewBox="0 0 32 20" fill="none">
@@ -83,6 +86,24 @@ const PaymentPage = forwardRef(function PaymentPage(
   const [cvvMode, setCvvMode] = useState(savedCards.length > 0 && selectedPayment === 'credit-card' && !cardData?.cvv)
   const [cvvValue, setCvvValue] = useState('')
   const [editingAddressIdx, setEditingAddressIdx] = useState(null)
+  const [processing, setProcessing] = useState(false)
+  const buyTimerRef = useRef(null)
+
+  // Don't let a pending purchase fire after the page is gone.
+  useEffect(() => () => clearTimeout(buyTimerRef.current), [])
+
+  const handleBuyNow = () => {
+    if (processing) return // swallows double-clicks, so only one timer is ever in flight
+    setProcessing(true)
+    buyTimerRef.current = setTimeout(() => {
+      if (errorState) {
+        setProcessing(false) // back to "Buy now" so the decline can be retried
+        setPurchaseAttempted(true)
+      } else {
+        navigate(`/checkout/confirmation${location.search}`)
+      }
+    }, PROCESSING_MS)
+  }
 
   const openCardModal = () => {
     setCardModalAddrIdx(addresses.length > 0 ? 0 : 'new')
@@ -429,7 +450,14 @@ const PaymentPage = forwardRef(function PaymentPage(
         <p className="terms-text">
           By clicking "Buy now" you agree to the <a href="#">Terms and Conditions</a>. All sales are final.
         </p>
-        <button className="btn-primary" disabled={!canBuy} onClick={() => { if (errorState) { setPurchaseAttempted(true) } else { navigate(`/checkout/confirmation${location.search}`) } }}>Buy now</button>
+        <button
+          className={`btn-primary${processing ? ' btn-primary--processing' : ''}`}
+          disabled={!canBuy || processing}
+          aria-busy={processing}
+          onClick={handleBuyNow}
+        >
+          {processing ? (<><span className="btn-spinner" aria-hidden="true" />Processing…</>) : 'Buy now'}
+        </button>
       </div>
 
       {showAddressModal && (
