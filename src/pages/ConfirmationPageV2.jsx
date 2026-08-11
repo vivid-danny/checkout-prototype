@@ -125,6 +125,8 @@ export default function ConfirmationPageV2({
 
           <div className="v2-columns">
             <div className="checkout-left confirmation-left">
+              <OfferCarousel offers={OFFERS} heading="Offers just for you" />
+
               <div className="confirmation-faq">
                 <p className="confirmation-heading">FAQ</p>
                 <div className="v2-faq-list">
@@ -136,8 +138,6 @@ export default function ConfirmationPageV2({
                   ))}
                 </div>
               </div>
-
-              <OfferCarousel offers={OFFERS} heading="Offers just for you" />
             </div>
 
             <aside className="sidebar v2-sidebar">
