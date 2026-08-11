@@ -196,11 +196,11 @@ export default function ConfirmationPage({
         </div>
       </main>
       <Footer />
-      {showOfferModals && !offersDone && (
-        <OfferModalSequence offers={OFFERS} onComplete={() => setOffersDone(true)} />
-      )}
-      {showOfferModals && offersDone && !actionModalDone && (
+      {showOfferModals && !actionModalDone && (
         <ActionRequiredModal onClose={() => setActionModalDone(true)} />
+      )}
+      {showOfferModals && actionModalDone && !offersDone && (
+        <OfferModalSequence offers={OFFERS} onComplete={() => setOffersDone(true)} />
       )}
     </div>
   )
