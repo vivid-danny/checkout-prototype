@@ -1,18 +1,8 @@
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import OfferCarousel from '../components/OfferCarousel'
+import { OFFERS } from '../data/offers'
 import { formatAddress } from '../utils/address'
-
-const ChevronLeft = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <path d="M9 11L5 7L9 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-
-const ChevronRight = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
 
 const ChevronDown = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -147,28 +137,7 @@ export default function ConfirmationPageV2({
                 </div>
               </div>
 
-              <div className="confirmation-promo v2-offers">
-                <div className="confirmation-promo-header">
-                  <p className="confirmation-heading">Offers just for you</p>
-                  <div className="confirmation-promo-nav">
-                    <button className="confirmation-icon-btn" aria-label="Previous offer"><ChevronLeft /></button>
-                    <button className="confirmation-icon-btn" aria-label="Next offer"><ChevronRight /></button>
-                  </div>
-                </div>
-                <div className="confirmation-promo-card">
-                  <div className="confirmation-promo-content">
-                    <div className="confirmation-promo-text">
-                      <p className="confirmation-promo-headline">Get over 100 million songs on Apple Music free for 1 month!</p>
-                      <p className="confirmation-promo-body">You'll never hear a commercial and you can download anything for offline listening.</p>
-                    </div>
-                    <img src="/apple-music-logo.png" alt="Apple Music" className="confirmation-promo-logo" />
-                  </div>
-                  <div className="confirmation-promo-cta">
-                    <button className="confirmation-promo-btn confirmation-promo-btn--primary">Join Now</button>
-                    <button className="confirmation-promo-btn confirmation-promo-btn--secondary">No Thanks</button>
-                  </div>
-                </div>
-              </div>
+              <OfferCarousel offers={OFFERS} heading="Offers just for you" />
             </div>
 
             <aside className="sidebar v2-sidebar">

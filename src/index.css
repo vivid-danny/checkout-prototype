@@ -1597,8 +1597,14 @@ a {
   transition: opacity 0.15s;
 }
 
-.confirmation-icon-btn:hover {
+/* :not(:disabled) so hover and disabled don't fight on equal specificity. */
+.confirmation-icon-btn:hover:not(:disabled) {
   opacity: 0.85;
+}
+
+.confirmation-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .confirmation-promo-card {
@@ -1612,7 +1618,10 @@ a {
 
 .confirmation-promo-content {
   display: flex;
+  align-items: center;
   gap: 16px;
+  /* Pinned so flipping between offers of differing copy length never moves the page. */
+  min-height: 110px;
 }
 
 .confirmation-promo-text {
@@ -1637,8 +1646,8 @@ a {
   color: var(--text-secondary);
 }
 
+/* Size comes from each offer's width/height img attributes, so aspect ratios differ per logo. */
 .confirmation-promo-logo {
-  width: 120px;
   flex-shrink: 0;
   object-fit: contain;
 }
