@@ -1,290 +1,39 @@
-import { useState, useRef, useEffect } from 'react'
-import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
 import { Agentation } from 'agentation'
-import CheckoutLayout from './components/CheckoutLayout'
-import PrototypeControls from './components/PrototypeControls'
-import LoginPage from './pages/LoginPage'
-import ShippingPage from './pages/ShippingPage'
-import PaymentPage from './pages/PaymentPage'
-import ConfirmationPage from './pages/ConfirmationPage'
-import ConfirmationPageV2 from './pages/ConfirmationPageV2'
-import { USER_PROFILES, SEED_CHECKOUTS } from './data/users'
+import CheckoutFlow from './CheckoutFlow'
+import LandingPage from './pages/LandingPage'
+import { getVariant, resolveConfig, SEED_ALIASES } from './experiments/registry'
 
-const EVENT = {
-  name: 'New York Knicks at Chicago Bulls',
-  date: 'Wednesday January 15 at 7:00pm',
-  venue: 'United Center, Chicago, IL',
+// Resolves /<variantId>/... to a registry entry and renders its flow.
+function VariantRoute() {
+  const { variantId } = useParams()
+  const variant = getVariant(variantId)
+  if (!variant) return <Navigate to="/" replace />
+  if (variant.type === 'custom') return variant.element
+  // Merge the variant's partial config over BASELINE so it inherits shared defaults.
+  return <CheckoutFlow config={resolveConfig(variant)} basePath={`/${variantId}`} />
 }
 
-const TICKET_DETAILS_BASE = {
-  section: 'Lower Level 105, Row 11',
-  quantity: 2,
-  perks: 'Front of Section, Unlimited Food & Beverage',
-}
-
-const ORDERS = {
-  'hard-stock': {
-    event: EVENT,
-    orderNumber: '31675173',
-    pricing: {
-      dealScore: 7,
-      dealLabel: 'Good Deal',
-      tickets: { count: 2, unitPrice: 127.50 },
-      fees: { count: 2, unitPrice: 24.95 },
-      taxes: 0,
-    },
-    ticketDetails: {
-      ...TICKET_DETAILS_BASE,
-      delivery: 'Shipped via UPS',
-      deliveryNote: 'Tickets delivered to your address',
-      inHandDate: 'Tickets delivered by January 13, 2026',
-      inHandBy: 'January 13, 2026',
-    },
-  },
-  'e-ticket': {
-    event: EVENT,
-    orderNumber: '31675298',
-    pricing: {
-      dealScore: 10,
-      dealLabel: 'Fantastic Deal',
-      tickets: { count: 2, unitPrice: 89.00 },
-      fees: { count: 2, unitPrice: 19.95 },
-      taxes: 14.22,
-    },
-    ticketDetails: {
-      ...TICKET_DETAILS_BASE,
-      delivery: 'E-Ticket',
-      deliveryNote: 'Delivered to your email',
-      inHandDate: 'E-Tickets available after purchase',
-    },
-  },
-}
-
-const PROGRESS = {
-  'hard-stock': { login: 'Step 1 of 3', shipping: 'Step 2 of 3', payment: 'Step 3 of 3' },
-  'e-ticket':   { login: 'Step 1 of 2', payment: 'Step 2 of 2' },
-}
-
-const EMPTY_FORM = {
-  name: '', phone: '', addressLine1: '', city: '', postalCode: '', state: '', country: '',
+// Back-compat for the retired ?seed= links from completed studies:
+// /checkout/login?seed=1 -> /offer-modals/checkout/login (seed 2 -> offer-carousel,
+// no/unknown seed -> baseline). Preserves the sub-path after /checkout.
+function SeedRedirect() {
+  const location = useLocation()
+  const seed = new URLSearchParams(location.search).get('seed')
+  const variantId = SEED_ALIASES[seed] || 'baseline'
+  const sub = location.pathname.replace(/^\/checkout/, '')
+  return <Navigate to={`/${variantId}/checkout${sub}`} replace />
 }
 
 export default function App() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const currentPage = location.pathname.split('/').pop()
-
-  // Not dev-gated: the ?seed= links are shared with user-testing participants on the deployed build.
-  const seedKey = new URLSearchParams(location.search).get('seed')
-  const seedData = seedKey ? SEED_CHECKOUTS[seedKey] : null
-
-  const [activeUser, setActiveUser] = useState('new')
-  const [ticketType, setTicketType] = useState('hard-stock')
-  const [email, setEmail] = useState(() => seedData ? seedData.email : '')
-  const [shippingForm, setShippingForm] = useState(() => seedData ? { ...seedData.shippingForm } : EMPTY_FORM)
-  const [selectedShipping, setSelectedShipping] = useState(null)
-  const [selectedPayment, setSelectedPayment] = useState(() => seedData ? seedData.selectedPayment : null)
-  const [cardData, setCardData] = useState(() => seedData ? seedData.cardData : null)
-  const [addresses, setAddresses] = useState([])
-  const [savedCards, setSavedCards] = useState([])
-  const [showPrototypeControls, setShowPrototypeControls] = useState(false)
-  const paymentRef = useRef(null)
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.shiftKey && e.key.toLowerCase() === 'h') {
-        setShowPrototypeControls((prev) => !prev)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
-
-  const reset = () => {
-    setEmail('')
-    setShippingForm(EMPTY_FORM)
-    setSelectedShipping(null)
-    setSelectedPayment(null)
-    setCardData(null)
-    setAddresses([])
-    setSavedCards([])
-    navigate('/checkout/login')
-  }
-
-  const handleUserChange = (userId) => {
-    setActiveUser(userId)
-    reset()
-  }
-
-  const handleTicketTypeChange = (type) => {
-    setTicketType(type)
-    reset()
-  }
-
-  const handleLoginContinue = (e) => {
-    const profile = USER_PROFILES[activeUser]
-    setEmail(e)
-    setAddresses([...profile.savedAddresses])
-    setSavedCards([...profile.savedCards])
-    if (ticketType === 'e-ticket') {
-      if (profile.savedCards.length > 0) {
-        setCardData({ ...profile.savedCards[0] })
-        setSelectedPayment('credit-card')
-      }
-      navigate('/checkout/payment')
-    } else {
-      if (profile.savedAddresses.length > 0) {
-        setShippingForm({ ...profile.savedAddresses[0] })
-      } else {
-        setShippingForm(EMPTY_FORM)
-      }
-      navigate('/checkout/shipping')
-    }
-  }
-
-  const handleAddAddress = (addr) => {
-    setAddresses(prev => [...prev, { ...addr, isNew: true }])
-  }
-
-  const handleUpdateAddress = (idx, updatedAddr) => {
-    const prevAddr = addresses[idx]
-    setAddresses(prev => prev.map((a, i) => i === idx ? { ...updatedAddr, isNew: true } : a))
-    if (
-      prevAddr?.name === shippingForm.name &&
-      prevAddr?.addressLine1 === shippingForm.addressLine1 &&
-      prevAddr?.postalCode === shippingForm.postalCode
-    ) {
-      setShippingForm({ ...updatedAddr })
-    }
-  }
-
-  const handleAddCard = (card) => {
-    setSavedCards(prev => [...prev, card])
-    setCardData(card)
-  }
-
-  const fillData = USER_PROFILES[activeUser].fillData
-
-  const controls = {
-    login: [],
-    shipping: [
-      {
-        label: 'Fill Address Form',
-        onClick: () => {
-          setShippingForm({ ...fillData.address })
-          setSelectedShipping('basic')
-        },
-      },
-    ],
-    payment: [
-      { label: 'Fill Credit Card', onClick: () => paymentRef.current?.fillCard() },
-      { label: 'Fill Address', onClick: () => paymentRef.current?.fillAddress() },
-    ],
-  }
-
-  const users = Object.entries(USER_PROFILES).map(([id, p]) => ({ id, label: p.label }))
-
-  // Seed 2 gets its own confirmation experience; every other seed keeps the original.
-  const ConfirmationVariant = seedKey === '2' ? ConfirmationPageV2 : ConfirmationPage
-
   return (
     <>
       <Routes>
-        <Route
-          path="/checkout"
-          element={
-            <CheckoutLayout
-              progress={PROGRESS[ticketType]?.[currentPage]}
-              event={ORDERS[ticketType].event}
-              pricing={ORDERS[ticketType].pricing}
-              ticketDetails={ORDERS[ticketType].ticketDetails}
-              selectedShipping={currentPage === 'payment' ? selectedShipping : null}
-              ticketType={ticketType}
-            >
-              <Outlet />
-            </CheckoutLayout>
-          }
-        >
-          <Route index element={<Navigate to="login" replace />} />
-          <Route
-            path="login"
-            element={<LoginPage email={email} onContinue={handleLoginContinue} />}
-          />
-          <Route
-            path="shipping"
-            element={
-              <ShippingPage
-                form={shippingForm}
-                setForm={setShippingForm}
-                addresses={addresses}
-                onAddAddress={handleAddAddress}
-                selectedShipping={selectedShipping}
-                setSelectedShipping={setSelectedShipping}
-                onContinue={() => {
-                  if (savedCards.length > 0 && !selectedPayment) {
-                    setCardData({ ...savedCards[0], billingForm: { ...shippingForm } })
-                    setSelectedPayment('credit-card')
-                  }
-                  navigate('/checkout/payment')
-                }}
-              />
-            }
-          />
-          <Route
-            path="payment"
-            element={
-              <PaymentPage
-                ref={paymentRef}
-                email={email}
-                shippingForm={shippingForm}
-                cardData={cardData}
-                setCardData={setCardData}
-                addresses={addresses}
-                onAddAddress={handleAddAddress}
-                onUpdateAddress={handleUpdateAddress}
-                savedCards={savedCards}
-                onAddCard={handleAddCard}
-                fillData={fillData}
-                selectedPayment={selectedPayment}
-                setSelectedPayment={setSelectedPayment}
-                ticketType={ticketType}
-                errorState={activeUser === 'error'}
-              />
-            }
-          />
-        </Route>
-        <Route
-          path="/checkout/confirmation"
-          element={
-            <ConfirmationVariant
-              email={email}
-              shippingForm={shippingForm}
-              selectedPayment={selectedPayment}
-              cardData={cardData}
-              event={ORDERS[ticketType].event}
-              pricing={ORDERS[ticketType].pricing}
-              ticketDetails={ORDERS[ticketType].ticketDetails}
-              orderNumber={ORDERS[ticketType].orderNumber}
-              ticketType={ticketType}
-              // Seed 1 gets the forced offer modals; seed 2 shows them inline as a carousel, and
-              // the no-seed page stays clean so it can be demoed without clicking through four.
-              showOfferModals={seedKey === '1'}
-            />
-          }
-        />
-        <Route path="*" element={<Navigate to="/checkout/login" replace />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/checkout/*" element={<SeedRedirect />} />
+        <Route path="/:variantId/*" element={<VariantRoute />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {showPrototypeControls && (
-        <PrototypeControls
-          actions={controls[currentPage] ?? []}
-          onReset={reset}
-          users={users}
-          activeUser={activeUser}
-          onUserChange={handleUserChange}
-          ticketType={ticketType}
-          onTicketTypeChange={handleTicketTypeChange}
-        />
-      )}
       {import.meta.env.DEV && <Agentation />}
     </>
   )
