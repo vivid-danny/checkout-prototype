@@ -2101,3 +2101,91 @@ a {
 .v2-sidebar {
   gap: 16px;
 }
+
+/* ================================
+   LANDING PAGE (experiment index)
+================================ */
+
+.landing-page {
+  min-height: 100vh;
+  background: var(--gray-50);
+  font-family: var(--font);
+  color: var(--text-primary);
+  padding: 64px 24px;
+}
+
+.landing-header {
+  max-width: 960px;
+  margin: 0 auto 40px;
+}
+
+.landing-title {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.landing-subtitle {
+  margin-top: 8px;
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.landing-main {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.landing-group-title {
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.landing-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.landing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.landing-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(4, 9, 44, 0.08);
+  transform: translateY(-2px);
+}
+
+.landing-card-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.landing-card-desc {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.landing-card-url {
+  margin-top: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--cobalt);
+}
