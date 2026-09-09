@@ -141,6 +141,39 @@ a {
 .header-progress-dot   { color: var(--text-secondary); }
 .header-progress-step  { color: var(--text-primary); }
 
+/* Subtle countdown timer shown next to the stepper. Tabular numerals keep the
+   width steady so the header doesn't jitter as the seconds tick down. */
+.header-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  padding-left: 8px;
+  border-left: 1px solid var(--gray-100);
+}
+
+/* Inline reassurance note next to the stepper — de-emphasized so it reads as a
+   supporting note, not a competing headline. */
+.header-message {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  padding-left: 8px;
+  border-left: 1px solid var(--gray-100);
+}
+
+/* Body copy for the reassurance modal. */
+.reassurance-body {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .header-message { display: none; }
+}
+
 /* ================================
    BUYER GUARANTEE BANNER
 ================================ */

@@ -3,10 +3,10 @@ import BuyerGuaranteeBanner from './BuyerGuaranteeBanner'
 import Footer from './Footer'
 import Sidebar from './Sidebar'
 
-export default function CheckoutLayout({ progress, event, pricing, ticketDetails, selectedShipping, ticketType, children }) {
+export default function CheckoutLayout({ progress, event, pricing, ticketDetails, selectedShipping, ticketType, timerDisplay, headerMessage, children }) {
   return (
     <div className="checkout-page">
-      <Header progress={progress} />
+      <Header progress={progress} timerDisplay={timerDisplay} message={headerMessage} />
       <BuyerGuaranteeBanner />
       <main className="checkout-main">
         <div className="checkout-container">

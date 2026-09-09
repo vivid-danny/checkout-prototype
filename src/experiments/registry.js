@@ -26,10 +26,21 @@ import { SEED_CHECKOUTS } from '../data/users'
 // offerMode: 'modal'  -> forced full-screen offer modal sequence (seed 1)
 //            'inline' -> offers shown inline on the confirmation page (seed 2)
 //            'none'   -> clean confirmation, no post-purchase offers
+//
+// timer: null            -> no checkout timer (default)
+//        { minutes: N }  -> an N-minute countdown runs across the flow steps and
+//                           shows in the header; on expiry the flow resets and the
+//                           user is sent back to the landing page.
+//
+// reassurance: 'none'    -> no "you won't be timed" message (default)
+//              'modal'   -> shown once as a modal at the start of checkout
+//              'inline'  -> shown inline next to the stepper in the header
 export const BASELINE = {
   seedData: null,
   ConfirmationComponent: ConfirmationPage,
   offerMode: 'none',
+  timer: null,
+  reassurance: 'none',
 }
 
 export const VARIANTS = [
@@ -66,6 +77,39 @@ export const VARIANTS = [
       seedData: SEED_CHECKOUTS['2'],
       ConfirmationComponent: ConfirmationPageV2,
       offerMode: 'inline',
+    },
+  },
+  {
+    id: 'countdown-timer',
+    name: '10-Minute Countdown',
+    description:
+      'A 10-minute countdown runs in the header during checkout. If it hits zero before you finish, you get kicked back out to the landing page.',
+    group: 'Checkout timing & pressure',
+    type: 'config',
+    config: {
+      timer: { minutes: 10 },
+    },
+  },
+  {
+    id: 'no-timer-modal',
+    name: 'No-Timer Reassurance (Modal)',
+    description:
+      "A modal at the start of checkout reassures the user they won't be timed, unlike competitors.",
+    group: 'Checkout timing & pressure',
+    type: 'config',
+    config: {
+      reassurance: 'modal',
+    },
+  },
+  {
+    id: 'no-timer-inline',
+    name: 'No-Timer Reassurance (Inline)',
+    description:
+      'The same "no timer" reassurance as the modal variant, shown inline next to the stepper in the header instead.',
+    group: 'Checkout timing & pressure',
+    type: 'config',
+    config: {
+      reassurance: 'inline',
     },
   },
 
