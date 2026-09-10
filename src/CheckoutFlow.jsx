@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import CheckoutLayout from './components/CheckoutLayout'
 import PrototypeControls from './components/PrototypeControls'
-import ReassuranceModal, { REASSURANCE_INLINE } from './components/ReassuranceModal'
+import ReassuranceModal from './components/ReassuranceModal'
 import { useCountdown } from './hooks/useCountdown'
 import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
@@ -214,7 +214,8 @@ export default function CheckoutFlow({ config, basePath }) {
               selectedShipping={currentPage === 'payment' ? selectedShipping : null}
               ticketType={ticketType}
               timerDisplay={timerActive ? timerDisplay : null}
-              headerMessage={reassurance === 'inline' ? REASSURANCE_INLINE : null}
+              railReassurance={reassurance === 'rail'}
+              responsive={currentPage !== 'shipping' && currentPage !== 'payment'}
             >
               <Outlet />
             </CheckoutLayout>

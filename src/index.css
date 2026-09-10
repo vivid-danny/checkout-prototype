@@ -99,6 +99,13 @@ a {
   min-width: 1440px;
 }
 
+/* Steps that have a mobile design opt out of the fixed desktop floor. Declared
+   outside any media query so the 960-1439px range reflows too. See RESPONSIVE
+   at the bottom of this file. */
+.checkout-page.checkout-page--responsive {
+  min-width: 0;
+}
+
 /* ================================
    HEADER
 ================================ */
@@ -111,6 +118,7 @@ a {
 }
 
 .header-inner {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -153,15 +161,28 @@ a {
   border-left: 1px solid var(--gray-100);
 }
 
-/* Inline reassurance note next to the stepper — de-emphasized so it reads as a
-   supporting note, not a competing headline. */
+/* Inline reassurance note, centered in the navbar as a small pill with a clock
+   icon. Absolutely centered so it sits mid-navbar regardless of the logo /
+   stepper widths on either side. */
 .header-message {
-  color: var(--text-secondary);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--gray-50);
+  color: var(--cobalt);
   font-size: 14px;
-  font-weight: 600;
-  padding-left: 8px;
-  border-left: 1px solid var(--gray-100);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
+
+.header-message svg { display: block; flex-shrink: 0; }
 
 /* Body copy for the reassurance modal. */
 .reassurance-body {
@@ -442,6 +463,56 @@ a {
   flex-shrink: 0;
 }
 
+/* ---- Rail reassurance ("no checkout timer") ---- */
+
+/* Sits inside .price-breakdown right after the total row. The extra top margin
+   opens it up from the 8px price-row rhythm without changing that rhythm. */
+.rail-reassurance {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--gray-50);
+}
+
+/* A white tile nested on the tinted surface: elevation instead of a border. */
+.rail-reassurance-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(4, 9, 44, 0.08);
+}
+
+.rail-reassurance-tile svg { display: block; }
+
+.rail-reassurance-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rail-reassurance-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--text-primary);
+}
+
+.rail-reassurance-body {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 19px;
+  color: var(--text-secondary);
+}
+
 /* ---- Ticket summary ---- */
 
 .ticket-summary {
@@ -520,33 +591,61 @@ a {
    LOGIN PAGE
 ================================ */
 
-.login-form-wrapper {
+/* Two stacked cards: Guest Checkout and Sign In. Each card puts its explanatory
+   copy beside a fixed-width action column on desktop, and stacks below 1100px
+   where the copy column would otherwise be squeezed to nothing. */
+
+.login-cards {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
-.login-title {
-  font-size: 24px;
-  font-weight: 900;
-  line-height: 30px;
-  color: var(--text-primary);
+.login-card {
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  padding: 32px;
 }
 
-.login-fields {
+.login-card-row {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 24px;
 }
 
-.login-fields .btn-primary {
-  max-width: none;
-}
-
-.login-input-group {
+.login-card-copy {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.login-card-actions {
+  flex: 0 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 22.5px;
+  color: var(--text-primary);
+}
+
+.login-card-desc {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+  color: var(--text-primary);
+}
+
+/* The shared .btn-primary is capped at 16.25rem for the shipping/payment pages;
+   inside a login card it fills its action column. */
+.login-card .btn-primary {
+  max-width: none;
 }
 
 .text-input {
@@ -572,18 +671,6 @@ a {
   border-color: var(--primary);
 }
 
-.login-account-note {
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 24px;
-  color: var(--text-primary);
-}
-
-.login-account-note a {
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 .btn-primary {
   display: flex;
   align-items: center;
@@ -606,54 +693,83 @@ a {
   opacity: 0.92;
 }
 
-/* ---- OR divider ---- */
+/* Outlined counterpart to .btn-primary, used for the Sign In card's Continue. */
+.login-btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  background: #fff;
+  color: var(--primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.login-btn-outline:hover {
+  background: var(--gray-50);
+}
+
+.login-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 48px;
+  padding: 12px 24px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.login-social-btn:hover {
+  background: var(--gray-50);
+}
+
+.login-social-btn svg {
+  flex-shrink: 0;
+}
+
+.login-social-btn:focus-visible,
+.login-btn-outline:focus-visible,
+.login-card .btn-primary:focus-visible {
+  outline: 2px solid var(--cobalt);
+  outline-offset: 2px;
+}
 
 .or-divider {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0;
+  padding: 8px 0;
 }
 
 .or-divider-line {
   flex: 1;
   height: 1px;
-  background: var(--gray-100);
+  background: var(--gray-200);
 }
 
 .or-divider-text {
   font-size: 12px;
   font-weight: 700;
   line-height: 15px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   letter-spacing: 1.2px;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-/* ---- Social login ---- */
-
-.social-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.social-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 8px 24px;
-  background: #fff;
-  border: 1px solid var(--gray-200);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.15s;
-}
-
-.social-btn:hover {
-  background: var(--gray-50);
 }
 
 /* ================================
@@ -2221,4 +2337,106 @@ a {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
   color: var(--cobalt);
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+
+/* Every rule below is scoped to .checkout-page--responsive so pages without a
+   mobile design (shipping, payment, confirmation) keep the desktop layout
+   untouched. Mobile proper starts at 960px; the two wider tiers exist so the
+   fixed 300px action column and 360px sidebar keep fitting on the way down. */
+
+@media (max-width: 1279px) {
+  .checkout-page--responsive .header,
+  .checkout-page--responsive .footer {
+    padding: 24px 40px;
+  }
+
+  .checkout-page--responsive .guarantee-banner {
+    padding: 8px 40px;
+  }
+
+  .checkout-page--responsive .checkout-main {
+    padding: 32px 40px 80px;
+  }
+
+  .checkout-page--responsive .checkout-container {
+    gap: 40px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .checkout-page--responsive .login-card-row {
+    flex-direction: column;
+  }
+
+  .checkout-page--responsive .login-card-actions {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 960px) {
+  .checkout-page--responsive .header {
+    padding: 24px 16px 8px;
+  }
+
+  .checkout-page--responsive .header-inner {
+    gap: 12px;
+  }
+
+  /* The logo keeps its full 178px until the step + countdown need the room —
+     object-fit: contain then scales it down instead of overflowing. */
+  .checkout-page--responsive .header-logo {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  /* Keep the step and countdown inline with the logo, but drop the "Checkout •"
+     prefix and the reassurance note — neither fits at 375px. */
+  .checkout-page--responsive .header-progress {
+    font-size: 14px;
+    line-height: 21px;
+  }
+
+  .checkout-page--responsive .header-progress-label,
+  .checkout-page--responsive .header-progress-dot,
+  .checkout-page--responsive .header-message {
+    display: none;
+  }
+
+  .checkout-page--responsive .guarantee-banner {
+    display: none;
+  }
+
+  .checkout-page--responsive .checkout-main {
+    padding: 8px 16px 24px;
+  }
+
+  .checkout-page--responsive .checkout-container {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* The mobile login design has no order summary. Hidden rather than unmounted
+     so the CSS stays the single source of truth for the breakpoint. */
+  .checkout-page--responsive .sidebar {
+    display: none;
+  }
+
+  .checkout-page--responsive .login-card {
+    padding: 24px 16px;
+  }
+
+  .checkout-page--responsive .footer {
+    padding: 24px 16px;
+  }
+
+  .checkout-page--responsive .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
 }

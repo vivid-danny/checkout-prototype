@@ -34,7 +34,8 @@ import { SEED_CHECKOUTS } from '../data/users'
 //
 // reassurance: 'none'    -> no "you won't be timed" message (default)
 //              'modal'   -> shown once as a modal at the start of checkout
-//              'inline'  -> shown inline next to the stepper in the header
+//              'rail'    -> a tinted card in the right rail directly under the
+//                           order total, persistent on every checkout step
 export const BASELINE = {
   seedData: null,
   ConfirmationComponent: ConfirmationPage,
@@ -103,13 +104,13 @@ export const VARIANTS = [
   },
   {
     id: 'no-timer-inline',
-    name: 'No-Timer Reassurance (Inline)',
+    name: 'No-Timer Reassurance (Order Summary)',
     description:
-      'The same "no timer" reassurance as the modal variant, shown inline next to the stepper in the header instead.',
+      'The same "no timer" reassurance as the modal variant, shown as a tinted card in the order summary directly under the total. Persistent on every checkout step rather than shown once.',
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
-      reassurance: 'inline',
+      reassurance: 'rail',
     },
   },
 
