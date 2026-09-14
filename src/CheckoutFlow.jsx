@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import CheckoutLayout from './components/CheckoutLayout'
 import PrototypeControls from './components/PrototypeControls'
+import ReassuranceModal from './components/ReassuranceModal'
+import { useCountdown } from './hooks/useCountdown'
 import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
 import PaymentPage from './pages/PaymentPage'
@@ -71,7 +73,7 @@ const EMPTY_FORM = {
 // navigate() call stays inside that namespace. `config` (from the variant registry)
 // selects the preloaded seed data, the confirmation component, and the offer mode.
 export default function CheckoutFlow({ config, basePath }) {
-  const { seedData = null, ConfirmationComponent, offerMode = 'none' } = config
+  const { seedData = null, ConfirmationComponent, offerMode = 'none', timer = null, reassurance = 'none' } = config
   const showOfferModals = offerMode === 'modal'
 
   const navigate = useNavigate()
@@ -88,6 +90,7 @@ export default function CheckoutFlow({ config, basePath }) {
   const [addresses, setAddresses] = useState([])
   const [savedCards, setSavedCards] = useState([])
   const [showPrototypeControls, setShowPrototypeControls] = useState(false)
+  const [showReassurance, setShowReassurance] = useState(reassurance === 'modal')
   const paymentRef = useRef(null)
 
   useEffect(() => {
@@ -110,6 +113,19 @@ export default function CheckoutFlow({ config, basePath }) {
     setSavedCards([])
     navigate(`${basePath}/checkout/login`)
   }
+
+  // Checkout timer: counts down only during the flow steps (not on the
+  // confirmation page, once the purchase is done). On expiry, reset the flow
+  // and kick the user back out to the landing page.
+  const timerActive = !!timer && currentPage !== 'confirmation'
+  const { mmss: timerDisplay } = useCountdown({
+    minutes: timer?.minutes,
+    active: timerActive,
+    onExpire: () => {
+      reset()
+      navigate('/')
+    },
+  })
 
   const handleUserChange = (userId) => {
     setActiveUser(userId)
@@ -197,6 +213,9 @@ export default function CheckoutFlow({ config, basePath }) {
               ticketDetails={ORDERS[ticketType].ticketDetails}
               selectedShipping={currentPage === 'payment' ? selectedShipping : null}
               ticketType={ticketType}
+              timerDisplay={timerActive ? timerDisplay : null}
+              railReassurance={reassurance === 'rail'}
+              responsive={currentPage !== 'shipping' && currentPage !== 'payment'}
             >
               <Outlet />
             </CheckoutLayout>
@@ -269,6 +288,9 @@ export default function CheckoutFlow({ config, basePath }) {
         />
         <Route path="*" element={<Navigate to="checkout/login" replace />} />
       </Routes>
+      {showReassurance && (
+        <ReassuranceModal onClose={() => setShowReassurance(false)} />
+      )}
       {showPrototypeControls && (
         <PrototypeControls
           actions={controls[currentPage] ?? []}

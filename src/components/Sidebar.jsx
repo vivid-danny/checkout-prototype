@@ -1,3 +1,5 @@
+import { REASSURANCE_RAIL_TITLE, REASSURANCE_RAIL_BODY } from './ReassuranceModal'
+
 const ChevronLeft = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
     <path d="M9 11L5 7L9 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -16,12 +18,36 @@ const ChevronDown = () => (
   </svg>
 )
 
+const ClockIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <circle cx="8" cy="8" r="6.25" stroke="#0951b6" strokeWidth="1.5" />
+    <path d="M8 4.75V8l2.25 1.5" stroke="#0951b6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
+// The "no checkout timer" reassurance, placed directly under the order total
+// where price anxiety peaks. A tinted surface with a nested white tile rather
+// than a bordered card, so it recedes into the rail.
+function RailReassurance() {
+  return (
+    <div className="rail-reassurance">
+      <div className="rail-reassurance-tile">
+        <ClockIcon />
+      </div>
+      <div className="rail-reassurance-copy">
+        <p className="rail-reassurance-title">{REASSURANCE_RAIL_TITLE}</p>
+        <p className="rail-reassurance-body">{REASSURANCE_RAIL_BODY}</p>
+      </div>
+    </div>
+  )
+}
+
 const SHIPPING_OPTIONS = {
   basic: { label: 'UPS Basic Delivery', cost: 17.50 },
   overnight: { label: 'UPS Overnight Delivery', cost: 34.00 },
 }
 
-function PriceBreakdown({ pricing, shippingMethod }) {
+function PriceBreakdown({ pricing, shippingMethod, railReassurance }) {
   const { dealScore, dealLabel, tickets, fees, taxes } = pricing
   const shipping = shippingMethod ? SHIPPING_OPTIONS[shippingMethod] : null
   const total = tickets.unitPrice * tickets.count + fees.unitPrice * fees.count + taxes + (shipping ? shipping.cost : 0)
@@ -72,11 +98,13 @@ function PriceBreakdown({ pricing, shippingMethod }) {
         <span className="price-row-label">Total</span>
         <span className="price-row-value">${total.toFixed(2)}</span>
       </div>
+
+      {railReassurance && <RailReassurance />}
     </div>
   )
 }
 
-export default function Sidebar({ event, pricing, ticketDetails, selectedShipping, ticketType }) {
+export default function Sidebar({ event, pricing, ticketDetails, selectedShipping, ticketType, railReassurance = false }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-gallery">
@@ -97,7 +125,7 @@ export default function Sidebar({ event, pricing, ticketDetails, selectedShippin
         <p className="sidebar-event-meta">{event.venue}</p>
       </div>
 
-      <PriceBreakdown pricing={pricing} shippingMethod={selectedShipping} />
+      <PriceBreakdown pricing={pricing} shippingMethod={selectedShipping} railReassurance={railReassurance} />
 
       <div className="sidebar-divider" />
 
