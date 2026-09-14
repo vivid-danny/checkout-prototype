@@ -90,8 +90,9 @@ export default function CheckoutFlow({ config, basePath }) {
   const [addresses, setAddresses] = useState([])
   const [savedCards, setSavedCards] = useState([])
   const [showPrototypeControls, setShowPrototypeControls] = useState(false)
-  const [showReassurance, setShowReassurance] = useState(reassurance === 'modal')
+  const [showReassurance, setShowReassurance] = useState(false)
   const paymentRef = useRef(null)
+  const reassuranceShownRef = useRef(false)
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -111,13 +112,27 @@ export default function CheckoutFlow({ config, basePath }) {
     setCardData(null)
     setAddresses([])
     setSavedCards([])
+    setShowReassurance(false)
+    reassuranceShownRef.current = false
     navigate(`${basePath}/checkout/login`)
   }
 
-  // Checkout timer: counts down only during the flow steps (not on the
-  // confirmation page, once the purchase is done). On expiry, reset the flow
-  // and kick the user back out to the landing page.
-  const timerActive = !!timer && currentPage !== 'confirmation'
+  // Every timing treatment (countdown, reassurance modal, rail card) holds until
+  // the user is past login, so step 1 stays free of timing messaging and the
+  // clock only starts once there's a real checkout to hold.
+  const inCheckoutSteps = currentPage !== 'login' && currentPage !== 'confirmation'
+
+  // Reassurance modal fires once, on arrival at the first post-login step.
+  useEffect(() => {
+    if (reassurance !== 'modal' || !inCheckoutSteps || reassuranceShownRef.current) return
+    reassuranceShownRef.current = true
+    setShowReassurance(true)
+  }, [reassurance, inCheckoutSteps])
+
+  // Checkout timer: counts down only during the post-login flow steps (not on
+  // login, and not on the confirmation page once the purchase is done). On
+  // expiry, reset the flow and kick the user back out to the landing page.
+  const timerActive = !!timer && inCheckoutSteps
   const { mmss: timerDisplay } = useCountdown({
     minutes: timer?.minutes,
     active: timerActive,
@@ -214,7 +229,7 @@ export default function CheckoutFlow({ config, basePath }) {
               selectedShipping={currentPage === 'payment' ? selectedShipping : null}
               ticketType={ticketType}
               timerDisplay={timerActive ? timerDisplay : null}
-              railReassurance={reassurance === 'rail'}
+              railReassurance={reassurance === 'rail' && inCheckoutSteps}
               responsive={currentPage !== 'shipping' && currentPage !== 'payment'}
             >
               <Outlet />
