@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 
+// Formats a second count as mm:ss. Shared so a static "starting time" display
+// (see TimerIntroModal) and the live header timer can't drift apart.
+export function formatMMSS(seconds) {
+  const mm = Math.floor(seconds / 60)
+  const ss = seconds % 60
+  return `${mm}:${String(ss).padStart(2, '0')}`
+}
+
 // Small reusable countdown. Ticks once a second while `active`, formats the
 // remaining time as mm:ss, and fires `onExpire` exactly once when it hits zero.
 // Modeled on the setTimeout + useRef + cleanup pattern in PaymentPage.jsx, but
@@ -34,9 +42,5 @@ export function useCountdown({ minutes, active, onExpire }) {
     return () => clearInterval(id)
   }, [active, totalSeconds])
 
-  const mm = Math.floor(secondsLeft / 60)
-  const ss = secondsLeft % 60
-  const mmss = `${mm}:${String(ss).padStart(2, '0')}`
-
-  return { secondsLeft, mmss }
+  return { secondsLeft, mmss: formatMMSS(secondsLeft) }
 }

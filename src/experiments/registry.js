@@ -36,12 +36,18 @@ import { SEED_CHECKOUTS } from '../data/users'
 //              'modal'   -> shown once as a modal at the start of checkout
 //              'rail'    -> a tinted card in the right rail directly under the
 //                           order total, persistent on every checkout step
+//
+// timerIntro: 'none'   -> the timer (if any) just appears (default)
+//             'modal'  -> a modal on the first post-login step explains why there
+//                         is a countdown, and the clock starts when it's dismissed
+//                         rather than on arrival. Only meaningful alongside `timer`.
 export const BASELINE = {
   seedData: null,
   ConfirmationComponent: ConfirmationPage,
   offerMode: 'none',
   timer: null,
   reassurance: 'none',
+  timerIntro: 'none',
 }
 
 export const VARIANTS = [
@@ -89,6 +95,18 @@ export const VARIANTS = [
     type: 'config',
     config: {
       timer: { minutes: 10 },
+    },
+  },
+  {
+    id: 'countdown-timer-context',
+    name: '10-Minute Countdown with Context',
+    description:
+      'The same 10-minute countdown, but a modal on step 2 explains it first: this is a live marketplace, and when the timer ends we re-check that the tickets are still available at this price. The clock starts when the modal is dismissed.',
+    group: 'Checkout timing & pressure',
+    type: 'config',
+    config: {
+      timer: { minutes: 10 },
+      timerIntro: 'modal',
     },
   },
   {
