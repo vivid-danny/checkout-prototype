@@ -149,50 +149,70 @@ a {
 .header-progress-dot   { color: var(--text-secondary); }
 .header-progress-step  { color: var(--text-primary); }
 
-/* Subtle countdown timer shown next to the stepper. Tabular numerals keep the
-   width steady so the header doesn't jitter as the seconds tick down. */
-.header-timer {
+/* Shared pill for the checkout countdown (see TimerPill.jsx): the navbar clock and
+   the static starting time in the countdown explainer modal. A white circular badge
+   carries the clock icon so the mark still reads against the tinted pill. Tabular
+   numerals keep the width steady so the navbar doesn't jitter as the seconds tick
+   down. */
+.timer-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-  padding-left: 8px;
-  border-left: 1px solid var(--gray-100);
-}
-
-/* Inline reassurance note, centered in the navbar as a small pill with a clock
-   icon. Absolutely centered so it sits mid-navbar regardless of the logo /
-   stepper widths on either side. */
-.header-message {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 8px;
+  padding: 4px 16px 4px 4px;
   border-radius: 999px;
   background: var(--gray-50);
-  color: var(--cobalt);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
   white-space: nowrap;
 }
 
-.header-message svg { display: block; flex-shrink: 0; }
+.timer-pill-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--cobalt);
+}
 
-/* Body copy for the reassurance modal. */
+.timer-pill-badge svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.timer-pill-text {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Modal size, where the pill is the focal point rather than a navbar status chip. */
+.timer-pill--lg {
+  gap: 12px;
+  padding: 6px 24px 6px 6px;
+}
+
+.timer-pill--lg .timer-pill-badge { width: 40px; height: 40px; }
+.timer-pill--lg .timer-pill-badge svg { width: 22px; height: 22px; }
+.timer-pill--lg .timer-pill-text { font-size: 24px; }
+
+/* Body copy for the reassurance modal, reused by the countdown explainer. */
 .reassurance-body {
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
 }
 
-@media (max-width: 600px) {
-  .header-message { display: none; }
+/* Centers the static starting time at the top of the countdown explainer modal,
+   so the clock is the subject before the body copy explains it. */
+.timer-intro-clock {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
 }
 
 /* ================================
@@ -1577,6 +1597,32 @@ a {
   max-width: none;
 }
 
+/* Centered variant of the shared modal, for short single-message modals where the
+   copy is the whole point (see TimerIntroModal). The close button leaves the header
+   flow so the title centers against the modal rather than against whatever space the
+   button leaves over, and the body gap tightens since there's only one block of copy. */
+.modal--centered .modal-header {
+  position: relative;
+  justify-content: center;
+  padding: 20px 56px;
+}
+
+.modal--centered .modal-title {
+  text-align: center;
+}
+
+.modal--centered .modal-close {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+}
+
+.modal--centered .modal-scroll-body {
+  text-align: center;
+  gap: 16px;
+}
+
 /* Payment closed-state summary row */
 .payment-summary-row {
   display: flex;
@@ -2394,18 +2440,26 @@ a {
     min-width: 0;
   }
 
-  /* Keep the step and countdown inline with the logo, but drop the "Checkout •"
-     prefix and the reassurance note — neither fits at 375px. */
+  /* Keep the step and the timing pill inline with the logo, but drop the
+     "Checkout •" prefix and shrink the pill — neither fits at 375px otherwise. */
   .checkout-page--responsive .header-progress {
     font-size: 14px;
     line-height: 21px;
   }
 
   .checkout-page--responsive .header-progress-label,
-  .checkout-page--responsive .header-progress-dot,
-  .checkout-page--responsive .header-message {
+  .checkout-page--responsive .header-progress-dot {
     display: none;
   }
+
+  .checkout-page--responsive .timer-pill {
+    gap: 6px;
+    padding: 3px 10px 3px 3px;
+  }
+
+  .checkout-page--responsive .timer-pill-badge { width: 22px; height: 22px; }
+  .checkout-page--responsive .timer-pill-badge svg { width: 13px; height: 13px; }
+  .checkout-page--responsive .timer-pill-text { font-size: 13px; }
 
   .checkout-page--responsive .guarantee-banner {
     display: none;

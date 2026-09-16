@@ -6,7 +6,7 @@ const CloseIcon = () => (
   </svg>
 )
 
-export default function Modal({ title, onClose, onSubmit, submitLabel, children }) {
+export default function Modal({ title, onClose, onSubmit, submitLabel, className = '', children }) {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -20,7 +20,10 @@ export default function Modal({ title, onClose, onSubmit, submitLabel, children 
 
   return (
     <div className={`modal-overlay${open ? ' modal-overlay--open' : ''}`} onClick={handleClose}>
-      <div className={`modal${open ? ' modal--open' : ''}`} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`modal${open ? ' modal--open' : ''}${className ? ` ${className}` : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <p className="modal-title">{title}</p>
           <button className="modal-close" onClick={handleClose}>

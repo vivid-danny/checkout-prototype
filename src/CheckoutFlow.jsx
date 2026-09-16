@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, Outlet, useNavigate, useLocation } from 'react
 import CheckoutLayout from './components/CheckoutLayout'
 import PrototypeControls from './components/PrototypeControls'
 import ReassuranceModal from './components/ReassuranceModal'
+import TimerIntroModal from './components/TimerIntroModal'
 import { useCountdown } from './hooks/useCountdown'
 import LoginPage from './pages/LoginPage'
 import ShippingPage from './pages/ShippingPage'
@@ -73,7 +74,7 @@ const EMPTY_FORM = {
 // navigate() call stays inside that namespace. `config` (from the variant registry)
 // selects the preloaded seed data, the confirmation component, and the offer mode.
 export default function CheckoutFlow({ config, basePath }) {
-  const { seedData = null, ConfirmationComponent, offerMode = 'none', timer = null, reassurance = 'none' } = config
+  const { seedData = null, ConfirmationComponent, offerMode = 'none', timer = null, reassurance = 'none', timerIntro = 'none' } = config
   const showOfferModals = offerMode === 'modal'
 
   const navigate = useNavigate()
@@ -91,8 +92,11 @@ export default function CheckoutFlow({ config, basePath }) {
   const [savedCards, setSavedCards] = useState([])
   const [showPrototypeControls, setShowPrototypeControls] = useState(false)
   const [showReassurance, setShowReassurance] = useState(false)
+  const [showTimerIntro, setShowTimerIntro] = useState(false)
+  const [timerStarted, setTimerStarted] = useState(false)
   const paymentRef = useRef(null)
   const reassuranceShownRef = useRef(false)
+  const timerIntroShownRef = useRef(false)
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -114,6 +118,9 @@ export default function CheckoutFlow({ config, basePath }) {
     setSavedCards([])
     setShowReassurance(false)
     reassuranceShownRef.current = false
+    setShowTimerIntro(false)
+    setTimerStarted(false)
+    timerIntroShownRef.current = false
     navigate(`${basePath}/checkout/login`)
   }
 
@@ -129,10 +136,19 @@ export default function CheckoutFlow({ config, basePath }) {
     setShowReassurance(true)
   }, [reassurance, inCheckoutSteps])
 
+  // Countdown explainer modal: same once-only trigger as the reassurance modal.
+  // Dismissing it is what starts the clock (see timerActive below), so the user
+  // always gets the full window no matter how long they spend reading.
+  useEffect(() => {
+    if (timerIntro !== 'modal' || !inCheckoutSteps || timerIntroShownRef.current) return
+    timerIntroShownRef.current = true
+    setShowTimerIntro(true)
+  }, [timerIntro, inCheckoutSteps])
+
   // Checkout timer: counts down only during the post-login flow steps (not on
   // login, and not on the confirmation page once the purchase is done). On
   // expiry, reset the flow and kick the user back out to the landing page.
-  const timerActive = !!timer && inCheckoutSteps
+  const timerActive = !!timer && inCheckoutSteps && (timerIntro !== 'modal' || timerStarted)
   const { mmss: timerDisplay } = useCountdown({
     minutes: timer?.minutes,
     active: timerActive,
@@ -305,6 +321,15 @@ export default function CheckoutFlow({ config, basePath }) {
       </Routes>
       {showReassurance && (
         <ReassuranceModal onClose={() => setShowReassurance(false)} />
+      )}
+      {showTimerIntro && (
+        <TimerIntroModal
+          minutes={timer?.minutes}
+          onClose={() => {
+            setShowTimerIntro(false)
+            setTimerStarted(true)
+          }}
+        />
       )}
       {showPrototypeControls && (
         <PrototypeControls
