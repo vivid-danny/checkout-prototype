@@ -53,9 +53,8 @@ export const BASELINE = {
 export const VARIANTS = [
   {
     id: 'baseline',
-    name: 'Baseline Checkout',
-    description:
-      'The clean end-to-end checkout flow with a standard confirmation page and no post-purchase offers. Good for demos, and the base every config variant inherits from.',
+    name: 'Baseline',
+    description: 'Standard checkout. No offers, no timer.',
     group: 'Baseline',
     type: 'config',
     config: {}, // pure BASELINE
@@ -63,8 +62,7 @@ export const VARIANTS = [
   {
     id: 'offer-modals',
     name: 'Forced Offer Modals (Seed 1)',
-    description:
-      'Post-purchase offers presented as a forced full-screen modal sequence on the confirmation page.',
+    description: 'Post-purchase offers as full-screen modals.',
     group: 'Post-purchase offers',
     type: 'config',
     // Inherits ConfirmationComponent from BASELINE; only changes the data + offer mode.
@@ -76,8 +74,7 @@ export const VARIANTS = [
   {
     id: 'offer-carousel',
     name: 'Inline Offer Carousel (Seed 2)',
-    description:
-      'Redesigned confirmation page that shows the same offers inline as a carousel instead of forced modals.',
+    description: 'Post-purchase offers inline on a redesigned confirmation page.',
     group: 'Post-purchase offers',
     type: 'config',
     config: {
@@ -88,9 +85,8 @@ export const VARIANTS = [
   },
   {
     id: 'countdown-timer',
-    name: '10-Minute Countdown',
-    description:
-      'A 10-minute countdown runs in the header during checkout. If it hits zero before you finish, you get kicked back out to the landing page.',
+    name: '10-Minute Timer',
+    description: 'Countdown in the header. Expiry kicks you back out.',
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
@@ -99,9 +95,8 @@ export const VARIANTS = [
   },
   {
     id: 'countdown-timer-context',
-    name: '10-Minute Countdown with Context',
-    description:
-      'The same 10-minute countdown, but a modal on step 2 explains it first: this is a live marketplace, and when the timer ends we re-check that the tickets are still available at this price. The clock starts when the modal is dismissed.',
+    name: '10-Minute Timer, Explained',
+    description: 'Same countdown, with a modal explaining why before the clock starts.',
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
@@ -111,9 +106,8 @@ export const VARIANTS = [
   },
   {
     id: 'no-timer-modal',
-    name: 'No-Timer Reassurance (Modal)',
-    description:
-      "A modal at the start of checkout reassures the user they won't be timed, unlike competitors.",
+    name: 'No-Timer Promise (Modal)',
+    description: "Modal up front: you won't be timed.",
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
@@ -122,9 +116,8 @@ export const VARIANTS = [
   },
   {
     id: 'no-timer-inline',
-    name: 'No-Timer Reassurance (Order Summary)',
-    description:
-      'The same "no timer" reassurance as the modal variant, shown as a tinted card in the order summary directly under the total. Persistent on every checkout step rather than shown once.',
+    name: 'No-Timer Promise (Order Summary)',
+    description: 'Same promise, pinned under the order total on every step.',
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
