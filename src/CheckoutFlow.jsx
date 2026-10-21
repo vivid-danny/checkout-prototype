@@ -74,7 +74,7 @@ const EMPTY_FORM = {
 // navigate() call stays inside that namespace. `config` (from the variant registry)
 // selects the preloaded seed data, the confirmation component, and the offer mode.
 export default function CheckoutFlow({ config, basePath }) {
-  const { seedData = null, ConfirmationComponent, offerMode = 'none', timer = null, reassurance = 'none', timerIntro = 'none' } = config
+  const { seedData = null, ConfirmationComponent, offerMode = 'none', timer = null, reassurance = 'none', timerIntro = 'none', defaultTicketType = 'hard-stock', pricing = 'always', railDetail = 'full' } = config
   const showOfferModals = offerMode === 'modal'
 
   const navigate = useNavigate()
@@ -82,7 +82,7 @@ export default function CheckoutFlow({ config, basePath }) {
   const currentPage = location.pathname.split('/').pop()
 
   const [activeUser, setActiveUser] = useState('new')
-  const [ticketType, setTicketType] = useState('hard-stock')
+  const [ticketType, setTicketType] = useState(defaultTicketType)
   const [email, setEmail] = useState(() => seedData ? seedData.email : '')
   const [shippingForm, setShippingForm] = useState(() => seedData ? { ...seedData.shippingForm } : EMPTY_FORM)
   const [selectedShipping, setSelectedShipping] = useState(null)
@@ -246,6 +246,8 @@ export default function CheckoutFlow({ config, basePath }) {
               ticketType={ticketType}
               timerDisplay={timerActive ? timerDisplay : null}
               railReassurance={reassurance === 'rail' && inCheckoutSteps}
+              showPricing={pricing === 'always' || currentPage !== 'login'}
+              railDetail={railDetail}
               responsive={currentPage !== 'shipping' && currentPage !== 'payment'}
             >
               <Outlet />

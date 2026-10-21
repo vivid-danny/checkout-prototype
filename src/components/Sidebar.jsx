@@ -47,10 +47,14 @@ const SHIPPING_OPTIONS = {
   overnight: { label: 'UPS Overnight Delivery', cost: 34.00 },
 }
 
-function PriceBreakdown({ pricing, shippingMethod, railReassurance }) {
+// `minimal` collapses the breakdown into a single all-in per-ticket row: fees and
+// shipping are folded into the unit price, with taxes still on their own line, so
+// the rows add up to the total. The deal score and promo link stay put.
+function PriceBreakdown({ pricing, shippingMethod, railReassurance, minimal = false }) {
   const { dealScore, dealLabel, tickets, fees, taxes } = pricing
   const shipping = shippingMethod ? SHIPPING_OPTIONS[shippingMethod] : null
   const total = tickets.unitPrice * tickets.count + fees.unitPrice * fees.count + taxes + (shipping ? shipping.cost : 0)
+  const allInUnitPrice = (total - taxes) / tickets.count
 
   return (
     <div className="price-breakdown">
@@ -63,31 +67,49 @@ function PriceBreakdown({ pricing, shippingMethod, railReassurance }) {
         </div>
       )}
 
-      <div className="price-row">
-        <span className="price-row-label">Tickets</span>
-        <span className="price-row-value">
-          ${tickets.unitPrice.toFixed(2)} x {tickets.count}
-        </span>
-      </div>
+      {minimal ? (
+        <>
+          <div className="price-row">
+            <span className="price-row-label">All-In Ticket Price</span>
+            <span className="price-row-value">
+              ${allInUnitPrice.toFixed(2)} x {tickets.count}
+            </span>
+          </div>
 
-      <div className="price-row">
-        <span className="price-row-label">Fees</span>
-        <span className="price-row-value">
-          ${fees.unitPrice.toFixed(2)} x {fees.count}
-        </span>
-      </div>
+          <div className="price-row">
+            <span className="price-row-label">Taxes</span>
+            <span className="price-row-value">${taxes.toFixed(2)}</span>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="price-row">
+            <span className="price-row-label">Tickets</span>
+            <span className="price-row-value">
+              ${tickets.unitPrice.toFixed(2)} x {tickets.count}
+            </span>
+          </div>
 
-      {shipping && (
-        <div className="price-row">
-          <span className="price-row-label">{shipping.label}</span>
-          <span className="price-row-value">${shipping.cost.toFixed(2)}</span>
-        </div>
+          <div className="price-row">
+            <span className="price-row-label">Fees</span>
+            <span className="price-row-value">
+              ${fees.unitPrice.toFixed(2)} x {fees.count}
+            </span>
+          </div>
+
+          {shipping && (
+            <div className="price-row">
+              <span className="price-row-label">{shipping.label}</span>
+              <span className="price-row-value">${shipping.cost.toFixed(2)}</span>
+            </div>
+          )}
+
+          <div className="price-row">
+            <span className="price-row-label">Taxes</span>
+            <span className="price-row-value">${taxes.toFixed(2)}</span>
+          </div>
+        </>
       )}
-
-      <div className="price-row">
-        <span className="price-row-label">Taxes</span>
-        <span className="price-row-value">${taxes.toFixed(2)}</span>
-      </div>
 
       <button className="promo-link">
         <span>Add gift card or promo code</span>
@@ -95,7 +117,7 @@ function PriceBreakdown({ pricing, shippingMethod, railReassurance }) {
       </button>
 
       <div className="price-row price-row--total">
-        <span className="price-row-label">Total</span>
+        <span className="price-row-label">{minimal ? 'Total Amount' : 'Total'}</span>
         <span className="price-row-value">${total.toFixed(2)}</span>
       </div>
 
@@ -104,7 +126,13 @@ function PriceBreakdown({ pricing, shippingMethod, railReassurance }) {
   )
 }
 
-export default function Sidebar({ event, pricing, ticketDetails, selectedShipping, ticketType, railReassurance = false }) {
+// `showPricing` is false on steps where the price breakdown is withheld, and
+// `railDetail: 'minimal'` collapses the breakdown into an all-in per-ticket price
+// and drops the in-hand date (see both config fields in src/experiments/registry.js). The rest
+// of the rail — event details, seat info, PayPal promo — always renders.
+export default function Sidebar({ event, pricing, ticketDetails, selectedShipping, ticketType, railReassurance = false, showPricing = true, railDetail = 'full' }) {
+  const minimal = railDetail === 'minimal'
+
   return (
     <aside className="sidebar">
       <div className="sidebar-gallery">
@@ -125,7 +153,9 @@ export default function Sidebar({ event, pricing, ticketDetails, selectedShippin
         <p className="sidebar-event-meta">{event.venue}</p>
       </div>
 
-      <PriceBreakdown pricing={pricing} shippingMethod={selectedShipping} railReassurance={railReassurance} />
+      {showPricing && (
+        <PriceBreakdown pricing={pricing} shippingMethod={selectedShipping} railReassurance={railReassurance} minimal={minimal} />
+      )}
 
       <div className="sidebar-divider" />
 
@@ -144,10 +174,12 @@ export default function Sidebar({ event, pricing, ticketDetails, selectedShippin
             <p className="ticket-info-desc">{ticketDetails.deliveryNote}</p>
           </div>
         )}
-        <div className="ticket-info-group">
-          <p className="ticket-info-title">In Hand Date</p>
-          <p className="ticket-info-desc">{ticketDetails.inHandDate}</p>
-        </div>
+        {!minimal && (
+          <div className="ticket-info-group">
+            <p className="ticket-info-title">In Hand Date</p>
+            <p className="ticket-info-desc">{ticketDetails.inHandDate}</p>
+          </div>
+        )}
       </div>
 
       <div className="sidebar-divider" />

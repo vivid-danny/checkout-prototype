@@ -41,6 +41,21 @@ import { SEED_CHECKOUTS } from '../data/users'
 //             'modal'  -> a modal on the first post-login step explains why there
 //                         is a countdown, and the clock starts when it's dismissed
 //                         rather than on arrival. Only meaningful alongside `timer`.
+//
+// defaultTicketType: 'hard-stock' -> the flow starts on the shipped order, so the
+//                                    user fills in a shipping step (default)
+//                    'e-ticket'   -> digital tickets: login goes straight to
+//                                    payment and the flow is 2 steps instead of 3
+//
+// pricing: 'always'      -> the rail price breakdown is visible on every step (default)
+//          'after-login'  -> the breakdown is withheld on the login step and appears
+//                           once the user is into the checkout steps
+//
+// railDetail: 'full'     -> the rail shows the full price breakdown and the in-hand
+//                           date (default)
+//             'minimal'  -> the breakdown collapses to an "All-In Ticket Price" row
+//                           (fees and shipping folded into the unit price) plus taxes
+//                           over a "Total Amount" row, and the in-hand date is dropped
 export const BASELINE = {
   seedData: null,
   ConfirmationComponent: ConfirmationPage,
@@ -48,6 +63,9 @@ export const BASELINE = {
   timer: null,
   reassurance: 'none',
   timerIntro: 'none',
+  defaultTicketType: 'hard-stock',
+  pricing: 'always',
+  railDetail: 'full',
 }
 
 export const VARIANTS = [
@@ -86,42 +104,54 @@ export const VARIANTS = [
   {
     id: 'countdown-timer',
     name: '10-Minute Timer',
-    description: 'Countdown in the header. Expiry kicks you back out.',
+    description: 'Digital tickets. Countdown in the header, expiry kicks you back out.',
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
       timer: { minutes: 10 },
+      defaultTicketType: 'e-ticket',
+      pricing: 'after-login',
+      railDetail: 'minimal',
     },
   },
   {
     id: 'countdown-timer-context',
     name: '10-Minute Timer, Explained',
-    description: 'Same countdown, with a modal explaining why before the clock starts.',
+    description: 'Digital tickets. A modal explains the countdown before the clock starts.',
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
       timer: { minutes: 10 },
       timerIntro: 'modal',
+      defaultTicketType: 'e-ticket',
+      pricing: 'after-login',
+      railDetail: 'minimal',
     },
   },
   {
     id: 'no-timer-modal',
     name: 'No-Timer Promise (Modal)',
-    description: "Modal up front: you won't be timed.",
+    description: "Digital tickets. Modal up front: you won't be timed.",
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
       reassurance: 'modal',
+      defaultTicketType: 'e-ticket',
+      pricing: 'after-login',
+      railDetail: 'minimal',
     },
   },
   {
     id: 'no-timer-inline',
     name: 'No-Timer Promise (Order Summary)',
-    description: 'Same promise, pinned under the order total on every step.',
+    description: 'Digital tickets. The same promise pinned under the order total.',
     group: 'Checkout timing & pressure',
     type: 'config',
     config: {
       reassurance: 'rail',
+      defaultTicketType: 'e-ticket',
+      pricing: 'after-login',
+      railDetail: 'minimal',
     },
   },
 
